@@ -9,6 +9,7 @@ import {
   primaryKey,
   foreignKey,
   boolean,
+  integer,// PROMJENA - dodato
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
@@ -113,3 +114,19 @@ export const suggestion = pgTable(
 );
 
 export type Suggestion = InferSelectModel<typeof suggestion>;
+//PROMJENA - sve ispod je dodato
+export const car = pgTable('car', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  price: integer('price').notNull(),
+  mileage: integer('mileage').notNull(),
+  engine_capacity: integer('engine_capacity').notNull(),
+  fuel_type: text('fuel_type').notNull(),
+  year: integer('year').notNull(),
+  condition: text('condition').notNull(),
+  power: integer('power').notNull(),
+  damages: text('damages').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export type Car = InferSelectModel<typeof car>;

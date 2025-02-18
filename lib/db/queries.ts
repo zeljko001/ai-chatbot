@@ -15,6 +15,7 @@ import {
   type Message,
   message,
   vote,
+  car, //PROMJENA - dodato
 } from './schema';
 import { ArtifactKind } from '@/components/artifact';
 
@@ -342,6 +343,15 @@ export async function updateChatVisiblityById({
     return await db.update(chat).set({ visibility }).where(eq(chat.id, chatId));
   } catch (error) {
     console.error('Failed to update chat visibility in database');
+    throw error;
+  }
+}
+//ORMJENA - SVE ISPOD JE DODATO
+export async function getAllCars() {
+  try {
+    return await db.select().from(car);
+  } catch (error) {
+    console.error('Failed to get cars from database');
     throw error;
   }
 }

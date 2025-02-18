@@ -1,141 +1,8 @@
+//PROMJENA 
 import { tool } from 'ai';
 import { z } from 'zod';
-
-interface Car {
-  name: string;
-  price: number;
-  mileage: number;
-  engine_capacity: number;
-  fuel_type: string;
-  year: number;
-  condition: string;
-  power: number;
-  damages: string;
-}
-
-const cars: Car[] = [
-  {
-    name: "Audi A4",
-    price: 10000,
-    mileage: 120,
-    engine_capacity: 2000,
-    fuel_type: "Diesel",
-    year: 2018,
-    condition: "New",
-    power: 110,
-    damages: "No damages"
-  },
-  {
-    name: "Audi A4",
-    price: 7000,
-    mileage: 120000,
-    engine_capacity: 2000,
-    fuel_type: "Diesel",
-    year: 2001,
-    condition: "Used",
-    power: 110,
-    damages: "Scratches on bumper"
-  },
-  {
-    name: "BMW 320d",
-    price: 18000,
-    mileage: 90000,
-    engine_capacity: 1995,
-    fuel_type: "Diesel",
-    year: 2019,
-    condition: "Used",
-    power: 140,
-    damages: "Minor scratches"
-  },
-  {
-    name: "Volkswagen Golf 7",
-    price: 13500,
-    mileage: 100000,
-    engine_capacity: 1600,
-    fuel_type: "Diesel",
-    year: 2017,
-    condition: "Used",
-    power: 85,
-    damages: "No damages"
-  },
-  {
-    name: "Mercedes-Benz C200",  
-    price: 22000,
-    mileage: 75000,
-    engine_capacity: 1991,
-    fuel_type: "Petrol",
-    year: 2020,
-    condition: "Used",
-    power: 150,
-    damages: "No damages"
-  },
-  {
-    name: "Toyota Corolla",
-    price: 17000,
-    mileage: 50000,
-    engine_capacity: 1800,
-    fuel_type: "Hybrid",
-    year: 2021,
-    condition: "New",
-    power: 90,
-    damages: "No damages"
-  },
-  {
-    name: "Ford Focus",
-    price: 12000,
-    mileage: 110000,
-    engine_capacity: 1500,
-    fuel_type: "Petrol",
-    year: 2016,
-    condition: "Used",
-    power: 95,
-    damages: "Minor dents"
-  },
-  {
-    name: "Opel Astra",    
-    price: 11000,
-    mileage: 130000,
-    engine_capacity: 1400,
-    fuel_type: "Petrol",
-    year: 2015,
-    condition: "Used",
-    power: 74,
-    damages: "No damages"
-  },
-  {
-    name: "Skoda Octavia",
-    price: 14000,
-    mileage: 85000,
-    engine_capacity: 1968,
-    fuel_type: "Diesel",
-    year: 2018,
-    condition: "Used",
-    power: 110,
-    damages: "Scratches on bumper"
-  },
-  {
-    name: "Peugeot 308",
-    price: 12500,
-    mileage: 95000,
-    engine_capacity: 1560,
-    fuel_type: "Diesel",
-    year: 2017,
-    condition: "Used",
-    power: 88,
-    damages: "No damages"
-  },
-  {
-    name: "Renault Megane",
-    price: 13000,
-    mileage: 70000,
-    engine_capacity: 1500,
-    fuel_type: "Diesel",
-    year: 2019,
-    condition: "Used",
-    power: 85,
-    damages: "No damages"
-  }
-];
+import { getAllCars } from '@/lib/db/queries';
+import type { Car } from '@/lib/db/schema';
 
 export const getBestCar = tool({
   description: 'Find the best car offer based on budget and desired car model',
@@ -144,6 +11,9 @@ export const getBestCar = tool({
     name: z.string().describe('Name/model of the desired car'),
   }),
   execute: async ({ budget, name }) => {
+    // Get cars from database
+    const cars = await getAllCars();
+
     // Find all matching cars within budget
     const matchingCars = cars.filter(
       (car) => car.name.toLowerCase() === name.toLowerCase() && car.price <= budget
