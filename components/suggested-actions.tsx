@@ -15,10 +15,15 @@ interface SuggestedActionsProps {
 
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   const suggestedActions = [
-    {
-      title: 'What are the advantages',
-      label: 'of using Next.js?',
-      action: 'What are the advantages of using Next.js?',
+    // {
+    //   title: 'What are the advantages',
+    //   label: 'of using Next.js?',
+    //   action: 'What are the advantages of using Next.js?',
+    // },
+        {
+      title: 'I want to buy BMW 320d,',//PROMEJNA
+      label: 'my budget is 20k',
+      action: 'I want to buy BMW 320d, my budget is 20k',
     },
     {
       title: 'Write code to',
