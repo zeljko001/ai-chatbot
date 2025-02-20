@@ -4,21 +4,17 @@ interface CarResultProps {
   result: {
     found: boolean;
     car?: {
+      id: number;
       name: string;
-      price: number;
-      year: number;
-      condition: string;
-      mileage: number;
+      price: string;
+      milage: string;
+      engine_capacity: string;
       fuel_type: string;
-      damages: string;
-    };
-    score?: number;
-    analysis?: {
-      value: string;
-      age: string;
       condition: string;
-      damages: string;
-      savings: number;
+      year: number;
+      power: string;
+      image_url: string;
+      created_at: Date;
     };
     message: string;
   };
@@ -40,10 +36,12 @@ const PureCarResult = ({ result }: CarResultProps) => {
           <h3 className="font-semibold">{result.car?.name}</h3>
           <p className="text-muted-foreground">{result.message}</p>
         </div>
-        {result.score && (
-          <span className="px-2 py-1 bg-green-100 dark:bg-green-900 rounded-md text-sm">
-            Score: {result.score}
-          </span>
+        {result.car?.image_url && (
+          <img 
+            src={result.car.image_url} 
+            alt={result.car.name}
+            className="w-24 h-24 object-cover rounded-md"
+          />
         )}
       </div>
 
@@ -51,7 +49,7 @@ const PureCarResult = ({ result }: CarResultProps) => {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-muted-foreground">Price</p>
-            <p>${result.car.price}</p>
+            <p>{result.car.price}</p>
           </div>
           <div>
             <p className="text-muted-foreground">Year</p>
@@ -59,7 +57,7 @@ const PureCarResult = ({ result }: CarResultProps) => {
           </div>
           <div>
             <p className="text-muted-foreground">Mileage</p>
-            <p>{result.car.mileage} km</p>
+            <p>{result.car.milage}</p>
           </div>
           <div>
             <p className="text-muted-foreground">Fuel Type</p>
@@ -70,28 +68,12 @@ const PureCarResult = ({ result }: CarResultProps) => {
             <p>{result.car.condition}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Damages</p>
-            <p>{result.car.damages}</p>
+            <p className="text-muted-foreground">Engine Capacity</p>
+            <p>{result.car.engine_capacity}</p>
           </div>
-        </div>
-      )}
-
-      {result.analysis && (
-        <div className="border-t pt-4 mt-4">
-          <h4 className="font-semibold mb-2">Analysis</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Value Rating</p>
-              <p>{result.analysis.value}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Age</p>
-              <p>{result.analysis.age}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Savings</p>
-              <p>${result.analysis.savings}</p>
-            </div>
+          <div>
+            <p className="text-muted-foreground">Power</p>
+            <p>{result.car.power}</p>
           </div>
         </div>
       )}
