@@ -15,7 +15,6 @@ import {
   type Message,
   message,
   vote,
-  car, //PROMJENA - dodato
 } from './schema';
 import { ArtifactKind } from '@/components/artifact';
 
@@ -182,6 +181,7 @@ export async function saveDocument({
   userId: string;
 }) {
   try {
+
     return await db.insert(document).values({
       id,
       title,
@@ -190,6 +190,7 @@ export async function saveDocument({
       userId,
       createdAt: new Date(),
     });
+
   } catch (error) {
     console.error('Failed to save document in database');
     throw error;
@@ -347,11 +348,11 @@ export async function updateChatVisiblityById({
   }
 }
 //ORMJENA - SVE ISPOD JE DODATO
-export async function getAllCars() {
-  try {
-    return await db.select().from(car);
-  } catch (error) {
-    console.error('Failed to get cars from database');
-    throw error;
-  }
-}
+// export async function getAllCars() {
+//   try {
+//     return await db.select().from(car);
+//   } catch (error) {
+//     console.error('Failed to get cars from database');
+//     throw error;
+//   }
+// }

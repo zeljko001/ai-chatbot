@@ -17,7 +17,7 @@ export const myProvider = customProvider({
       middleware: extractReasoningMiddleware({ tagName: 'think' }),
     }),
     // 'title-model': openai('gpt-4-turbo'),
-    'title-model': openai('gpt-4o-mini'),//PROMJENA
+    'title-model': openai('gpt-4o-mini'),
     'artifact-model': openai('gpt-4o-mini'),
   },
   imageModels: {

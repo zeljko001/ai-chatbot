@@ -7,6 +7,7 @@ import { DataStreamWriter } from 'ai';
 import { Document } from '../db/schema';
 import { saveDocument } from '../db/queries';
 import { Session } from 'next-auth';
+import { carDocumentHandler } from "@/artifacts/car/server";
 
 export interface SaveDocumentProps {
   id: string;
@@ -51,6 +52,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
         session: args.session,
       });
 
+
       if (args.session?.user?.id) {
         await saveDocument({
           id: args.id,
@@ -94,6 +96,7 @@ export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
   codeDocumentHandler,
   imageDocumentHandler,
   sheetDocumentHandler,
+  carDocumentHandler,
 ];
 
-export const artifactKinds = ['text', 'code', 'image', 'sheet'] as const;
+export const artifactKinds = ['text', 'code', 'image', 'sheet', 'car'] as const;

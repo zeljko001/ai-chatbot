@@ -21,6 +21,7 @@ import { useArtifact } from '@/hooks/use-artifact';
 import equal from 'fast-deep-equal';
 import { SpreadsheetEditor } from './sheet-editor';
 import { ImageEditor } from './image-editor';
+import { CarPreview } from './car-preview';
 
 interface DocumentPreviewProps {
   isReadonly: boolean;
@@ -279,6 +280,18 @@ const DocumentContent = ({ document }: { document: Document }) => {
           status={artifact.status}
           isInline={true}
         />
+      ) : document.kind === 'car' ? (
+        <div className="p-4">
+          {document.content && (() => {
+            try {
+              const data = JSON.parse(document.content);
+              return <CarPreview result={data} />;
+            } catch (e) {
+              console.error('Failed to parse car data:', e);
+              return null;
+            }
+          })()}
+        </div>
       ) : null}
     </div>
   );

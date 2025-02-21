@@ -9,7 +9,7 @@ import {
   primaryKey,
   foreignKey,
   boolean,
-  integer,// PROMJENA - dodato
+  integer,
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
@@ -73,7 +73,7 @@ export const document = pgTable(
     createdAt: timestamp('createdAt').notNull(),
     title: text('title').notNull(),
     content: text('content'),
-    kind: varchar('text', { enum: ['text', 'code', 'image', 'sheet'] })
+    kind: varchar('text', { enum: ['text', 'code', 'image', 'sheet', 'car'] })
       .notNull()
       .default('text'),
     userId: uuid('userId')
@@ -114,7 +114,6 @@ export const suggestion = pgTable(
 );
 
 export type Suggestion = InferSelectModel<typeof suggestion>;
-//PROMJENA - sve ispod je dodato
 export const car = pgTable('car', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),

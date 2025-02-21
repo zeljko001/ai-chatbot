@@ -75,13 +75,11 @@ export async function POST(request: Request) {
                 'createDocument',
                 'updateDocument',
                 'requestSuggestions',
-                'getBestCar',//PROMJENA
               ],
         experimental_transform: smoothStream({ chunking: 'word' }),
         experimental_generateMessageId: generateUUID,
         tools: {
           getWeather,
-          getBestCar, // PROMJENA
           createDocument: createDocument({ session, dataStream }),
           updateDocument: updateDocument({ session, dataStream }),
           requestSuggestions: requestSuggestions({

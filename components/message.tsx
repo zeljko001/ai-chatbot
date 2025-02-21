@@ -184,8 +184,8 @@ const PurePreviewMessage = ({
                     >
                       {toolName === 'getWeather' ? (
                         <Weather />
-                      ) : toolName === 'getBestCar' ? (//PROMJENA
-                        <CarResult result={args} /> //i ovo je dodato
+                      ) : toolName === 'getBestCar' ? (
+                        <CarResult result={args} /> 
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview isReadonly={isReadonly} args={args} />
                       ) : toolName === 'updateDocument' ? (
