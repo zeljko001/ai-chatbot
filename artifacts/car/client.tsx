@@ -42,46 +42,86 @@ const CarDetails = ({ content }: { content: string }) => {
     const { car, analysis } = data;
 
     return (
-      <div className="p-4 space-y-4">
-        <div className="flex gap-6">
-          <div className="w-1/2">
-            <div className="relative w-full h-[300px] rounded-lg overflow-hidden">
-              <img 
-                src={car.photo_url} 
-                alt={car.name}
-                className="object-cover size-full"
-              />
+      <div className="max-w-7xl mx-auto p-4">
+        <div className="flex gap-8">
+          {/* Left side - Images (3/4 width) */}
+          <div className="w-3/4">
+            <div className="grid grid-cols-2 gap-2 h-[450px]">
+              {/* Large left image */}
+              <div>
+                <img 
+                  src={car.photo_url} 
+                  alt={car.name}
+                  className="w-full h-full object-cover rounded-l-xl cursor-pointer"
+                />
+              </div>
+              
+              {/* Right side 2x2 grid */}
+              <div className="grid grid-cols-2 grid-rows-2 gap-2">
+                <img 
+                  src={car.photo_url} 
+                  alt={car.name}
+                  className="w-full h-full object-cover cursor-pointer"
+                />
+                <img 
+                  src={car.photo_url} 
+                  alt={car.name}
+                  className="w-full h-full object-cover rounded-tr-xl cursor-pointer"
+                />
+                <img 
+                  src={car.photo_url} 
+                  alt={car.name}
+                  className="w-full h-full object-cover cursor-pointer"
+                />
+                <div className="relative">
+                  <img 
+                    src={car.photo_url} 
+                    alt={car.name}
+                    className="w-full h-full object-cover rounded-br-xl cursor-pointer"
+                  />
+                  <button className="absolute bottom-4 right-4 bg-white px-4 py-2 rounded-lg 
+                    shadow-md hover:shadow-lg transition-shadow duration-200 font-medium">
+                    Show all photos
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="w-1/2 space-y-4">
-            <div className="flex justify-between items-start">
+          {/* Right side - Info (1/4 width) */}
+          <div className="w-1/4">
+            {/* Title and Price Section */}
+            <div className="flex flex-col gap-4 border-b pb-4 mb-6">
               <h2 className="text-2xl font-bold">{car.name}</h2>
-              <p className="text-2xl font-semibold text-green-600">{car.price}</p>
+              <span className="text-2xl font-semibold text-green-600">{car.price}</span>
             </div>
-            
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Specifications:</h3>
-              <div className="space-y-1">
-                <p><span className="font-medium">Year:</span> {car.year}</p>
-                <p><span className="font-medium">Mileage:</span> {car.mileage}</p>
-                <p><span className="font-medium">Engine:</span> {car.cubic_capacity}</p>
-                <p><span className="font-medium">Power:</span> {car.horsepower}</p>
-                <p><span className="font-medium">Fuel:</span> {car.fuel}</p>
-                <p><span className="font-medium">Damage:</span> {car.damage}</p>
-                <p><span className="font-medium">Transmission:</span> {car.transmission}</p>
+
+            {/* Car Details */}
+            <div className="mb-8">
+              <div className="grid grid-cols-[80px_1fr] gap-y-4">
+                <span className="font-semibold text-green-600">Year: <span className="font-normal">{car.year}</span></span>
+                <span className="font-semibold text-green-600">Mileage: <span className="font-normal">{car.mileage}</span></span>
+                <span className="font-semibold text-green-600">Engine: <span className="font-normal">{car.cubic_capacity}</span></span>
+                <span className="font-semibold text-green-600">Power: <span className="font-normal">{car.horsepower}</span></span>
+                <span className="font-semibold text-green-600">Fuel: <span className="font-normal">{car.fuel}</span></span>
+                <span className="font-semibold text-green-600">Damage: <span className="font-normal">{car.damage}</span></span>
+                <span className="font-semibold text-green-600">Transmission: <span className="font-normal">{car.transmission}</span></span>
               </div>
             </div>
 
+            {/* First Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-6"></div>
+
+            {/* Analysis Section */}
             {analysis && (
-              <div className="bg-gray-50 dark:bg-zinc-800 p-4 rounded-lg">
-                <h4 className="font-bold mb-2">Analysis</h4>
-                <div className="space-y-1">
-                  <p><span className="font-medium">Value:</span> {analysis.value}</p>
-                  <p><span className="font-medium">Age:</span> {analysis.age}</p>
-                  <p><span className="font-medium">Condition:</span> {analysis.condition}</p>
-                  <p><span className="font-medium">Engine:</span> {analysis.engine}</p>
-                  <p><span className="font-medium">Potential Savings:</span> ${analysis.savings}</p>
+              <div className="mb-8">
+                <h4 className="text-xl font-semibold mb-4">Analysis</h4>
+                <div className="grid grid-cols-[80px_1fr] gap-y-4">
+                  <span className="font-semibold text-green-600">Value: <span className="font-normal">{analysis.value}</span></span>
+                  <span className="font-semibold text-green-600">Age: <span className="font-normal">{analysis.age}</span></span>
+                  <span className="font-semibold text-green-600">Condition: <span className="font-normal">{analysis.condition}</span></span>
+                  <span className="font-semibold text-green-600">Engine: <span className="font-normal">{analysis.engine}</span></span>
+                  <span className="font-semibold text-green-600">Potential Savings: <span className="font-normal">${analysis.savings}</span></span>
                 </div>
               </div>
             )}
