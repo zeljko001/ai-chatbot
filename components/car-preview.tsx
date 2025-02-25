@@ -3,20 +3,25 @@ import { CarIcon } from './icons';
 interface CarResult {
   found: boolean;
   car: {
+    id: number;
     name: string;
     price: string;
-    milage: string;
-    engine_capacity: string;
-    fuel_type: string;
-    condition: string;
-    year: number;
-    power: string;
-    image_url: string;
+    transmission: string;
+    horsepower: string;
+    year: string;
+    mileage: string;
+    photo_url: string;
+    damage: string;
+    fuel: string;
+    cubic_capacity: string;
+    url: string;
+    created_at: string;
   };
   analysis: {
     value: string;
     age: string;
     condition: string;
+    engine: string;
     savings: number;
   };
   message: string;
@@ -42,7 +47,7 @@ export function CarPreview({ result }: { result: CarResult }) {
     <div className="flex items-center gap-3 p-2 rounded-lg border bg-card text-card-foreground">
       <div className="relative size-20 rounded-md overflow-hidden shrink-0">
         <img 
-          src={result.car.image_url} 
+          src={result.car.photo_url} 
           alt={result.car.name}
           className="object-cover size-full"
         />
@@ -51,10 +56,10 @@ export function CarPreview({ result }: { result: CarResult }) {
         <h3 className="font-medium truncate">{result.car.name}</h3>
         <div className="text-sm text-muted-foreground space-y-0.5">
           <p className="truncate">
-            {result.car.year} • {result.car.milage} • {result.car.fuel_type}
+            {result.car.year} • {result.car.mileage} • {result.car.fuel}
           </p>
           <p className="truncate text-xs">
-            {result.car.engine_capacity} • {result.car.power} • {result.car.condition}
+            {result.car.cubic_capacity} • {result.car.horsepower} • {result.car.damage}
           </p>
           <p className="font-medium">{result.car.price}</p>
         </div>

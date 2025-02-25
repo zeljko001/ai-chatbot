@@ -8,24 +8,29 @@ import { carPrompt } from "@/lib/ai/prompts";
 const carSchema = z.object({
   found: z.boolean(),
   car: z.object({
+    id: z.number(),
     name: z.string(),
     price: z.string(),
-    milage: z.string(),
-    engine_capacity: z.string(),
-    fuel_type: z.string(),
-    condition: z.string(),
-    year: z.number(),
-    power: z.string(),
-    image_url: z.string(),
+    transmission: z.string(),
+    horsepower: z.string(),
+    year: z.string(),
+    mileage: z.string(),
+    photo_url: z.string(),
+    damage: z.string(),
+    fuel: z.string(),
+    cubic_capacity: z.string(),
+    url: z.string(),
+    created_at: z.string()
   }).optional(),
   analysis: z.object({
     value: z.string(),
     age: z.string(),
     condition: z.string(),
-    savings: z.number(),
+    engine: z.string(),
+    savings: z.number()
   }).optional(),
   message: z.string(),
-  score: z.number().optional(),
+  score: z.number().optional()
 });
 
 export const carDocumentHandler = createDocumentHandler<"car">({

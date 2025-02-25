@@ -7,20 +7,25 @@ import { getBestCar } from "@/lib/ai/tools/best-car";
 interface CarArtifactMetadata {
   found: boolean;
   car?: {
+    id: number;
     name: string;
     price: string;
-    milage: string;
-    engine_capacity: string;
-    fuel_type: string;
-    condition: string;
-    year: number;
-    power: string;
-    image_url: string;
+    transmission: string;
+    horsepower: string;
+    year: string;
+    mileage: string;
+    photo_url: string;
+    damage: string;
+    fuel: string;
+    cubic_capacity: string;
+    url: string;
+    created_at: string;
   };
   analysis?: {
     value: string;
     age: string;
     condition: string;
+    engine: string;
     savings: number;
   };
   message: string;
@@ -41,11 +46,11 @@ const CarDetails = ({ content }: { content: string }) => {
         <div className="flex gap-6">
           <div className="w-1/2">
             <div className="relative w-full h-[300px] rounded-lg overflow-hidden">
-            <img 
-          src={car.image_url} 
-          alt={car.name}
-          className="object-cover size-full"
-        />
+              <img 
+                src={car.photo_url} 
+                alt={car.name}
+                className="object-cover size-full"
+              />
             </div>
           </div>
 
@@ -59,11 +64,12 @@ const CarDetails = ({ content }: { content: string }) => {
               <h3 className="text-lg font-semibold">Specifications:</h3>
               <div className="space-y-1">
                 <p><span className="font-medium">Year:</span> {car.year}</p>
-                <p><span className="font-medium">Mileage:</span> {car.milage}</p>
-                <p><span className="font-medium">Engine:</span> {car.engine_capacity}</p>
-                <p><span className="font-medium">Power:</span> {car.power}</p>
-                <p><span className="font-medium">Fuel:</span> {car.fuel_type}</p>
-                <p><span className="font-medium">Condition:</span> {car.condition}</p>
+                <p><span className="font-medium">Mileage:</span> {car.mileage}</p>
+                <p><span className="font-medium">Engine:</span> {car.cubic_capacity}</p>
+                <p><span className="font-medium">Power:</span> {car.horsepower}</p>
+                <p><span className="font-medium">Fuel:</span> {car.fuel}</p>
+                <p><span className="font-medium">Damage:</span> {car.damage}</p>
+                <p><span className="font-medium">Transmission:</span> {car.transmission}</p>
               </div>
             </div>
 
@@ -74,6 +80,7 @@ const CarDetails = ({ content }: { content: string }) => {
                   <p><span className="font-medium">Value:</span> {analysis.value}</p>
                   <p><span className="font-medium">Age:</span> {analysis.age}</p>
                   <p><span className="font-medium">Condition:</span> {analysis.condition}</p>
+                  <p><span className="font-medium">Engine:</span> {analysis.engine}</p>
                   <p><span className="font-medium">Potential Savings:</span> ${analysis.savings}</p>
                 </div>
               </div>
