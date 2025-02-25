@@ -28,9 +28,19 @@ interface CarArtifactMetadata {
     engine: string;
     savings: number;
   };
+  description: string;
   message: string;
-  score?: number;
+  score: number;
 }
+
+const getScoreColor = (score: number) => {
+  const normalizedScore = score / 100;
+  if (normalizedScore >= 0.95) return "bg-emerald-500/20 text-emerald-700";
+  if (normalizedScore >= 0.80) return "bg-blue-500/20 text-blue-700";
+  if (normalizedScore >= 0.60) return "bg-yellow-500/20 text-yellow-700";
+  if (normalizedScore >= 0.40) return "bg-orange-500/20 text-orange-700";
+  return "bg-red-500/20 text-red-700";
+};
 
 const CarDetails = ({ content }: { content: string }) => {
   try {
@@ -40,14 +50,15 @@ const CarDetails = ({ content }: { content: string }) => {
     }
 
     const { car, analysis } = data;
+    console.log(car);
 
     return (
-      <div className="max-w-7xl mx-auto p-4">
-        <div className="flex gap-8">
-          {/* Left side - Images (3/4 width) */}
+      <div className="max-w-7xl mx-auto p-4 flex flex-col gap-8 h-screen">
+        {/* Top Section */}
+        <div className="flex flex-1 gap-8">
+          {/* Images (3/4 width) */}
           <div className="w-3/4">
-            <div className="grid grid-cols-2 gap-2 h-[450px]">
-              {/* Large left image */}
+            <div className="grid grid-cols-2 gap-2 h-full">
               <div>
                 <img 
                   src={car.photo_url} 
@@ -55,8 +66,6 @@ const CarDetails = ({ content }: { content: string }) => {
                   className="w-full h-full object-cover rounded-l-xl cursor-pointer"
                 />
               </div>
-              
-              {/* Right side 2x2 grid */}
               <div className="grid grid-cols-2 grid-rows-2 gap-2">
                 <img 
                   src={car.photo_url} 
@@ -79,8 +88,34 @@ const CarDetails = ({ content }: { content: string }) => {
                     alt={car.name}
                     className="w-full h-full object-cover rounded-br-xl cursor-pointer"
                   />
-                  <button className="absolute bottom-4 right-4 bg-white px-4 py-2 rounded-lg 
-                    shadow-md hover:shadow-lg transition-shadow duration-200 font-medium">
+                  <button 
+                    style={{ 
+                      backgroundColor: 'white', 
+                      color: 'black', 
+                      position: 'absolute', 
+                      bottom: 1, 
+                      right: 2,
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      transition: 'background-color 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f3f4f6';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'white';
+                    }}
+                    className="">
+                    <img 
+                      src="/images/ikonica.png" 
+                      alt="photos" 
+                      style={{ width: '14px', height: '14px' }}
+                    />
                     Show all photos
                   </button>
                 </div>
@@ -88,15 +123,18 @@ const CarDetails = ({ content }: { content: string }) => {
             </div>
           </div>
 
-          {/* Right side - Info (1/4 width) */}
+          {/* Basic Info (1/4 width) */}
           <div className="w-1/4">
-            {/* Title and Price Section */}
             <div className="flex flex-col gap-4 border-b pb-4 mb-6">
               <h2 className="text-2xl font-bold">{car.name}</h2>
-              <span className="text-2xl font-semibold text-green-600">{car.price}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-semibold text-green-600">{car.price}</span>
+                <div className={`flex items-center justify-center px-4 py-2 rounded-full ${getScoreColor(data.score)}`}>
+                  <span className="font-semibold">{Math.round(data.score)}</span>
+                </div>
+              </div>
             </div>
 
-            {/* Car Details */}
             <div className="mb-8">
               <div className="grid grid-cols-[80px_1fr] gap-y-4">
                 <span className="font-semibold text-green-600">Year: <span className="font-normal">{car.year}</span></span>
@@ -108,11 +146,13 @@ const CarDetails = ({ content }: { content: string }) => {
                 <span className="font-semibold text-green-600">Transmission: <span className="font-normal">{car.transmission}</span></span>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* First Divider */}
-            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-6"></div>
-
-            {/* Analysis Section */}
+        {/* Bottom Section */}
+        <div className="flex flex-1 gap-8">
+          {/* Analysis (1/4 width) */}
+          <div className="w-1/4">
             {analysis && (
               <div className="mb-8">
                 <h4 className="text-xl font-semibold mb-4">Analysis</h4>
@@ -125,6 +165,19 @@ const CarDetails = ({ content }: { content: string }) => {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Description (3/4 width) */}
+          <div className="w-3/4">
+            <h4 className="text-xl font-semibold mb-4">Description</h4>
+            <div 
+              className="text-sm text-gray-600 dark:text-gray-300" 
+              style={{ 
+                textAlign: 'justify',
+                textJustify: 'inter-word'
+              }}>
+              {data.description}
+            </div>
           </div>
         </div>
       </div>
@@ -143,6 +196,8 @@ export const carArtifact = new Artifact<"car", CarArtifactMetadata>({
     setMetadata({
       found: false,
       message: "No car data loaded yet.",
+      description: "",
+      score: 0
     });
   },
 
@@ -224,3 +279,4 @@ export const carArtifact = new Artifact<"car", CarArtifactMetadata>({
     }
   ],
 });
+

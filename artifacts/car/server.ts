@@ -29,8 +29,9 @@ const carSchema = z.object({
     engine: z.string(),
     savings: z.number()
   }).optional(),
+  description: z.string(),
   message: z.string(),
-  score: z.number().optional()
+  score: z.number()
 });
 
 export const carDocumentHandler = createDocumentHandler<"car">({

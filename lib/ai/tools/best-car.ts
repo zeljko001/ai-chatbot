@@ -10,7 +10,8 @@ export const getBestCar = tool({
   execute: async ({ budget, name }) => {
     try {
       const response = await fetch(
-        'https://my-ai-api-gu2r.onrender.com/api/chat',
+        // 'https://my-ai-api-gu2r.onrender.com/api/chat',//RENDER
+        'http://localhost:3001/api/chat',//LOCAL
         {
           method: 'POST',
           headers: {
