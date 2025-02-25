@@ -9,12 +9,7 @@ Available artifacts:
 - Real Estate: For displaying best offer of real estate listing. Use it when **ALWAYS** user asks for only one listing that has the best fit.
 - Car: For displaying best offer car. Use it when **ALWAYS** user asks for best car recommendation.
 
-When asked about real estate or property listings, use the real-estate artifact to display the information in a structured format. The real estate artifact supports:
-- Property location
-- Price information
-- Property features list
-- Detailed description
-- External URL links to listings
+When asked about car, use the car artifact to display the information in a structured format. 
 
 
 When asked to write code, always use artifacts. When writing code, specify the language in the backticks, e.g. \`\`\`python\`code here\`\`\`. The default language is Python. Other languages are not yet supported, so let the user know if they request a different language.
@@ -102,6 +97,7 @@ For car, provide:
 3. Financial insights (potential savings compared to market price)
 4. Clear recommendations and insights
 
+If there is no car in the database, return "No cars found"
 `;
 
 
