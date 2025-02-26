@@ -1,8 +1,20 @@
 import { Artifact } from "@/components/create-artifact";
-import Image from "next/image";
 import { toast } from "sonner";
-import { CopyIcon, RedoIcon, UndoIcon} from '@/components/icons';
-import { getBestCar } from "@/lib/ai/tools/best-car";
+import { CopyIcon, RedoIcon, UndoIcon } from '@/components/icons';
+import { useState, useEffect, useCallback } from 'react';
+
+// Define missing icons inline
+const ChevronLeft = ({ size = 24 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15 18l-6-6 6-6" />
+  </svg>
+);
+
+const ChevronRight = ({ size = 24 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 18l6-6-6-6" />
+  </svg>
+);
 
 interface CarArtifactMetadata {
   found: boolean;
@@ -42,141 +54,552 @@ const getScoreColor = (score: number) => {
   return "bg-red-500/20 text-red-700";
 };
 
-const CarDetails = ({ content }: { content: string }) => {
-  try {
-    const data = typeof content === 'string' ? JSON.parse(content) : content;
-    if (!data.found || !data.car) {
-      return <div className="p-4 text-red-500">{data.message}</div>;
+// Image Slideshow Component
+const ImageSlideshow = ({ images }: { images: string[] }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  
+  // Convert single image to array
+  const imageArray = Array.isArray(images) ? images : [images].filter(Boolean);
+  
+  // For demo purposes, duplicate the image to show a gallery effect
+  const displayImages = imageArray.length ? [
+    imageArray[0], 
+    imageArray[0], 
+    imageArray[0], 
+    imageArray[0], 
+    imageArray[0]
+  ] : [];
+
+  const handleImageError = (key: string) => {
+    setFailedImages(prev => new Set([...prev, key]));
+  };
+
+  const openPreview = (index: number) => {
+    if (displayImages.length > 0) {
+      setPreviewIndex(index);
+      setShowPreview(true);
     }
+  };
 
-    const { car, analysis } = data;
-    console.log(car);
+  const nextImage = () => setPreviewIndex((i) => (i + 1) % displayImages.length);
+  const prevImage = () => setPreviewIndex((i) => (i - 1 + displayImages.length) % displayImages.length);
 
-    return (
-      <div className="max-w-7xl mx-auto p-4 flex flex-col gap-8 h-screen">
-        {/* Top Section */}
-        <div className="flex flex-1 gap-8">
-          {/* Images (3/4 width) */}
-          <div className="w-3/4">
-            <div className="grid grid-cols-2 gap-2 h-full">
-              <div>
-                <img 
-                  src={car.photo_url} 
-                  alt={car.name}
-                  className="w-full h-full object-cover rounded-l-xl cursor-pointer"
-                />
-              </div>
-              <div className="grid grid-cols-2 grid-rows-2 gap-2">
-                <img 
-                  src={car.photo_url} 
-                  alt={car.name}
-                  className="w-full h-full object-cover cursor-pointer"
-                />
-                <img 
-                  src={car.photo_url} 
-                  alt={car.name}
-                  className="w-full h-full object-cover rounded-tr-xl cursor-pointer"
-                />
-                <img 
-                  src={car.photo_url} 
-                  alt={car.name}
-                  className="w-full h-full object-cover cursor-pointer"
-                />
-                <div className="relative">
-                  <img 
-                    src={car.photo_url} 
-                    alt={car.name}
-                    className="w-full h-full object-cover rounded-br-xl cursor-pointer"
-                  />
-                  <button 
-                    style={{ 
-                      backgroundColor: 'white', 
-                      color: 'black', 
-                      position: 'absolute', 
-                      bottom: 1, 
-                      right: 2,
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '0.375rem',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f3f4f6';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'white';
-                    }}
-                    className="">
-                    <img 
-                      src="/images/ikonica.png" 
-                      alt="photos" 
-                      style={{ width: '14px', height: '14px' }}
-                    />
-                    Show all photos
-                  </button>
-                </div>
-              </div>
+  const handleKeyPress = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') setShowPreview(false);
+    if (e.key === 'ArrowRight') nextImage();
+    if (e.key === 'ArrowLeft') prevImage();
+  }, []);
+
+  useEffect(() => {
+    if (showPreview) {
+      window.addEventListener('keydown', handleKeyPress);
+      return () => window.removeEventListener('keydown', handleKeyPress);
+    }
+  }, [showPreview, handleKeyPress]);
+
+  return (
+    <div style={{ width: '100%', position: 'relative' }}>
+      <div style={{ display: 'flex', gap: '16px', padding: '16px', height: '50%' }}>
+        {/* Main large image - left side */}
+        <div style={{ 
+          width: '50%',
+          backgroundColor: '#f3f4f6',
+          borderRadius: '12px',
+          position: 'relative'
+        }}>
+          {displayImages.length > 0 ? (
+            <img
+              src={displayImages[currentIndex]}
+              alt="Main car view"
+              onClick={() => openPreview(currentIndex)}
+              style={{
+                width: '100%',
+                height: '400px',
+                objectFit: 'cover',
+                borderRadius: '12px',
+                cursor: 'pointer'
+              }}
+              onError={() => handleImageError(`main-${currentIndex}`)}
+            />
+          ) : (
+            <div style={{
+              width: '100%',
+              height: '400px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#f3f4f6',
+              color: '#6b7280',
+              borderRadius: '12px'
+            }}>
+              No image available
             </div>
-          </div>
-
-          {/* Basic Info (1/4 width) */}
-          <div className="w-1/4">
-            <div className="flex flex-col gap-4 border-b pb-4 mb-6">
-              <h2 className="text-2xl font-bold">{car.name}</h2>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-semibold text-green-600">{car.price}</span>
-                <div className={`flex items-center justify-center px-4 py-2 rounded-full ${getScoreColor(data.score)}`}>
-                  <span className="font-semibold">{Math.round(data.score)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-8">
-              <div className="grid grid-cols-[80px_1fr] gap-y-4">
-                <span className="font-semibold text-green-600">Year: <span className="font-normal">{car.year}</span></span>
-                <span className="font-semibold text-green-600">Mileage: <span className="font-normal">{car.mileage}</span></span>
-                <span className="font-semibold text-green-600">Engine: <span className="font-normal">{car.cubic_capacity}</span></span>
-                <span className="font-semibold text-green-600">Power: <span className="font-normal">{car.horsepower}</span></span>
-                <span className="font-semibold text-green-600">Fuel: <span className="font-normal">{car.fuel}</span></span>
-                <span className="font-semibold text-green-600">Damage: <span className="font-normal">{car.damage}</span></span>
-                <span className="font-semibold text-green-600">Transmission: <span className="font-normal">{car.transmission}</span></span>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Bottom Section */}
-        <div className="flex flex-1 gap-8">
-          {/* Analysis (1/4 width) */}
-          <div className="w-1/4">
-            {analysis && (
-              <div className="mb-8">
-                <h4 className="text-xl font-semibold mb-4">Analysis</h4>
-                <div className="grid grid-cols-[80px_1fr] gap-y-4">
-                  <span className="font-semibold text-green-600">Value: <span className="font-normal">{analysis.value}</span></span>
-                  <span className="font-semibold text-green-600">Age: <span className="font-normal">{analysis.age}</span></span>
-                  <span className="font-semibold text-green-600">Condition: <span className="font-normal">{analysis.condition}</span></span>
-                  <span className="font-semibold text-green-600">Engine: <span className="font-normal">{analysis.engine}</span></span>
-                  <span className="font-semibold text-green-600">Potential Savings: <span className="font-normal">${analysis.savings}</span></span>
+        {/* Right side 2x2 grid */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr 1fr', 
+          gridTemplateRows: '1fr 1fr',
+          gap: '8px', 
+          width: '50%',
+          height: '400px'
+        }}>
+          {[1, 2, 3].map((offset) => (
+            <div key={`grid-${offset}`} style={{ 
+              height: '196px',
+              backgroundColor: '#f3f4f6',
+              borderRadius: '12px',
+              overflow: 'hidden'
+            }}>
+              {displayImages.length > 0 ? (
+                <img
+                  src={displayImages[0]}
+                  alt={`Car view ${offset}`}
+                  onClick={() => openPreview(0)}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    cursor: 'pointer'
+                  }}
+                  onError={() => handleImageError(`thumb-${offset}`)}
+                />
+              ) : (
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#6b7280'
+                }}>
+                  No image
                 </div>
+              )}
+            </div>
+          ))}
+          
+          {/* Last image with overlay */}
+          <div style={{ 
+            height: '196px', 
+            position: 'relative',
+            backgroundColor: '#f3f4f6',
+            borderRadius: '12px',
+            overflow: 'hidden'
+          }}>
+            {displayImages.length > 0 ? (
+              <>
+                <img
+                  src={displayImages[0]}
+                  alt="Car view 4"
+                  onClick={() => openPreview(0)}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    filter: 'brightness(0.7)',
+                    cursor: 'pointer'
+                  }}
+                  onError={() => handleImageError(`last-${currentIndex}`)}
+                />
+                {displayImages.length > 4 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '24px',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}>
+                    +{displayImages.length - 4}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#6b7280'
+              }}>
+                No image
               </div>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Description (3/4 width) */}
-          <div className="w-3/4">
-            <h4 className="text-xl font-semibold mb-4">Description</h4>
-            <div 
-              className="text-sm text-gray-600 dark:text-gray-300" 
-              style={{ 
-                textAlign: 'justify',
-                textJustify: 'inter-word'
-              }}>
-              {data.description}
+      {/* Full screen preview */}
+      {showPreview && displayImages.length > 0 && (
+        <div 
+          onClick={() => setShowPreview(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50
+          }}
+        >
+          <div onClick={e => e.stopPropagation()}>
+            <img
+              src={displayImages[previewIndex]}
+              alt="Preview"
+              style={{
+                maxHeight: '90vh',
+                maxWidth: '90vw',
+                objectFit: 'contain'
+              }}
+            />
+          </div>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              prevImage();
+            }}
+            style={{
+              position: 'absolute',
+              left: '24px',
+              backgroundColor: 'white',
+              borderRadius: '50%',
+              padding: '12px',
+              cursor: 'pointer',
+              border: 'none'
+            }}
+          >
+            <ChevronLeft size={24} />
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              nextImage();
+            }}
+            style={{
+              position: 'absolute',
+              right: '24px',
+              backgroundColor: 'white',
+              borderRadius: '50%',
+              padding: '12px',
+              cursor: 'pointer',
+              border: 'none'
+            }}
+          >
+            <ChevronRight size={24} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CarDetails = ({ content }: { content: string }) => {
+  try {
+    if (!content) {
+      return <div className="p-4 text-red-500">No car data available</div>;
+    }
+
+    const data = typeof content === 'string' ? JSON.parse(content) : content;
+    
+    if (!data || !data.found) {
+      return (
+        <div className="p-4 text-red-500">
+          {data?.message || 'No matching car found'}
+          {data?.description && <p className="mt-2 text-gray-600">{data.description}</p>}
+        </div>
+      );
+    }
+
+    if (!data.car) {
+      return (
+        <div className="p-4 text-red-500">
+          {data.message || 'Car details not available'}
+          {data.description && <p className="mt-2 text-gray-600">{data.description}</p>}
+        </div>
+      );
+    }
+
+    const { car, analysis } = data;
+
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        paddingBottom: '48px' 
+      }}>
+        <div style={{ 
+          maxWidth: '1200px', 
+          margin: '0 auto',
+          padding: '0 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          height: 'calc(100vh - 48px)',
+          position: 'relative'
+        }}>
+          {/* Top Half - Image Gallery */}
+          <div style={{ height: '35%', width: '100%', minHeight: '300px' }}>
+            <ImageSlideshow images={[car.photo_url]} />
+          </div>
+
+          {/* Bottom Half - Content */}
+          <div style={{ 
+            height: '65%',
+            overflowY: 'auto',
+            position: 'relative',
+            marginTop: '15%'
+          }}>
+            <div style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '16px',
+              paddingLeft: '16px',
+              paddingRight: '16px'
+            }}>
+              {/* Left Column - Car Info */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
+                    borderRadius: '0.75rem',
+                    padding: '1.25rem',
+                    border: '1px solid #e5e7eb',
+                    flex: 1,
+                    marginRight: '1rem'
+                  }}>
+                    <h1 style={{ 
+                      fontSize: '1.675rem', 
+                      fontWeight: 500, 
+                      marginBottom: '0.5rem', 
+                      lineHeight: '1.2',
+                      color: '#111827'
+                    }}>{car.name}</h1>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.5rem',
+                      background: 'white',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #e5e7eb',
+                      width: 'fit-content',
+                      fontSize: '0.875rem',
+                      letterSpacing: '0.025em'
+                    }}>
+                      <span style={{ color: '#6b7280', fontWeight: 400 }}>ID:</span>
+                      <span style={{ color: '#4b5563', fontWeight: 600 }}>{car.id}</span>
+                    </div>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    gap: '0.75rem',
+                    background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
+                    borderRadius: '0.75rem',
+                    padding: '1.25rem',
+                    border: '1px solid #e5e7eb',
+                    minWidth: '200px'
+                  }}>
+                    <p style={{ 
+                      fontSize: '1.5rem', 
+                      fontWeight: 700, 
+                      lineHeight: '1.2', 
+                      color: '#111827',
+                      textAlign: 'center'
+                    }}>
+                      {car.price}
+                    </p>
+                    <div className={`flex items-center justify-center px-4 py-2 rounded-full ${getScoreColor(data.score)}`}>
+                      <span className="font-semibold">{Math.round(data.score)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Car Specifications */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
+                  borderRadius: '0.75rem',
+                  padding: '1.25rem',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <h2 style={{ 
+                    fontSize: '1.25rem', 
+                    fontWeight: 600, 
+                    marginBottom: '0.75rem',
+                    color: '#111827'
+                  }}>Specifications</h2>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(2, 1fr)', 
+                    gap: '1rem',
+                    background: 'white',
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Year:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.year}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Mileage:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.mileage}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Engine:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.cubic_capacity}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Horsepower:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.horsepower}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Fuel:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.fuel}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Transmission:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.transmission}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Damage:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.damage}</span>
+                      </div>
+                      {car.url && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                          <a
+                            href={car.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              color: '#3b82f6',
+                              fontSize: '0.875rem',
+                              textDecoration: 'none',
+                              padding: '0.5rem 0.75rem',
+                              borderRadius: '0.5rem',
+                              transition: 'all 0.2s',
+                              backgroundColor: '#f9fafb',
+                              border: '1px solid #e5e7eb'
+                            }}
+                          >
+                            View listing
+                            <span className="ml-1">↗</span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Analysis and Description */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Analysis Card */}
+                {analysis && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
+                    borderRadius: '0.75rem',
+                    padding: '1.25rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <h2 style={{ 
+                      fontSize: '1.25rem', 
+                      fontWeight: 600, 
+                      marginBottom: '0.75rem',
+                      color: '#111827'
+                    }}>Analysis</h2>
+                    <div style={{ 
+                      background: 'white',
+                      borderRadius: '0.5rem',
+                      padding: '1rem',
+                      border: '1px solid #e5e7eb',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.75rem'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Value:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{analysis.value}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Age:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{analysis.age}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Condition:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{analysis.condition}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Engine:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{analysis.engine}</span>
+                      </div>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        padding: '0.5rem',
+                        backgroundColor: '#f0fdf4',
+                        borderRadius: '0.375rem',
+                        border: '1px solid #dcfce7'
+                      }}>
+                        <span style={{ color: '#166534', fontSize: '0.875rem', fontWeight: 500 }}>Potential Savings:</span>
+                        <span style={{ fontWeight: 600, color: '#166534' }}>${analysis.savings}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Description Card */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
+                  borderRadius: '0.75rem',
+                  padding: '1.25rem',
+                  border: '1px solid #e5e7eb',
+                  flex: 1
+                }}>
+                  <h2 style={{ 
+                    fontSize: '1.25rem', 
+                    fontWeight: 600, 
+                    marginBottom: '0.75rem',
+                    color: '#111827'
+                  }}>Description</h2>
+                  <div style={{ 
+                    background: 'white',
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    border: '1px solid #e5e7eb',
+                    color: '#4b5563',
+                    fontSize: '0.9375rem',
+                    lineHeight: '1.6',
+                    textAlign: 'justify',
+                    height: '100%',
+                    overflow: 'auto'
+                  }}>
+                    {data.description || "No detailed description available for this vehicle."}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -184,7 +607,11 @@ const CarDetails = ({ content }: { content: string }) => {
     );
   } catch (e) {
     console.error('Failed to parse car data:', e);
-    return null;
+    return (
+      <div className="p-4 text-red-500">
+        Failed to load car details. Please try again.
+      </div>
+    );
   }
 };
 
@@ -265,18 +692,7 @@ export const carArtifact = new Artifact<"car", CarArtifactMetadata>({
       },
     },
   ],
-
-  toolbar: [
-    {
-      icon: <span>🚗</span>,
-      description: "Find Best Car",
-      onClick: (context) => {
-        context.appendMessage({
-          role: "user",
-          content: "Please find me the best car match",
-        });
-      },
-    }
-  ],
+  
+  toolbar: [], // Empty array satisfies the type requirement without adding buttons
 });
 
