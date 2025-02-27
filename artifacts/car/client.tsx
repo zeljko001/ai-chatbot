@@ -241,20 +241,23 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
                     onError={() => handleImageError(`last-4`)}
                   />
                   {displayImages.length > 5 && (
-                    <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontSize: '24px',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}>
+                    <div 
+                      onClick={() => openPreview(4)}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: '24px',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
                       +{displayImages.length - 5}
                     </div>
                   )}
