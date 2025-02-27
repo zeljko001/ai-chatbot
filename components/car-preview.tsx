@@ -10,11 +10,12 @@ interface CarResult {
     horsepower: string;
     year: string;
     mileage: string;
-    photo_url: string;
+    all_photos: string[];
     damage: string;
     fuel: string;
     cubic_capacity: string;
     url: string;
+    location: string;
     created_at: string;
   };
   analysis: {
@@ -47,7 +48,7 @@ export function CarPreview({ result }: { result: CarResult }) {
     <div className="flex items-center gap-3 p-2 rounded-lg border bg-card text-card-foreground">
       <div className="relative size-20 rounded-md overflow-hidden shrink-0">
         <img 
-          src={result.car.photo_url} 
+          src={result.car.all_photos[0]} 
           alt={result.car.name}
           className="object-cover size-full"
         />
@@ -56,12 +57,14 @@ export function CarPreview({ result }: { result: CarResult }) {
         <h3 className="font-medium truncate">{result.car.name}</h3>
         <div className="text-sm text-muted-foreground space-y-0.5">
           <p className="truncate">
-            {result.car.year} • {result.car.mileage} • {result.car.fuel}
-          </p>
-          <p className="truncate text-xs">
-            {result.car.cubic_capacity} • {result.car.horsepower} • {result.car.damage}
+            {result.car.year} • {result.car.fuel} • {result.car.horsepower}
           </p>
           <p className="font-medium">{result.car.price}</p>
+          <p className="truncate text-xs text-center">
+            <span className="inline-flex items-center w-full">
+              📍 {result.car.location}
+            </span>
+          </p>
         </div>
       </div>
       <div className={`flex flex-col items-center justify-center size-14 rounded-full shrink-0 ${getScoreColor(result.score)}`}>
