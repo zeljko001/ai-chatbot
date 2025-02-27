@@ -16,6 +16,33 @@ const ChevronRight = ({ size = 24 }: { size?: number }) => (
   </svg>
 );
 
+// Add a useWindowSize hook for responsive design
+const useWindowSize = () => {
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+  });
+
+  useEffect(() => {
+    // Only execute on the client
+    if (typeof window === 'undefined') return;
+
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Call initially
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return windowSize;
+};
+
 interface CarArtifactMetadata {
   found: boolean;
   car?: {
@@ -56,6 +83,9 @@ const getScoreColor = (score: number) => {
 
 // Image Slideshow Component
 const ImageSlideshow = ({ images }: { images: string[] }) => {
+  const { width } = useWindowSize();
+  const isMobile = width < 768;
+  
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previewIndex, setPreviewIndex] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
@@ -102,10 +132,16 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
 
   return (
     <div style={{ width: '100%', position: 'relative' }}>
-      <div style={{ display: 'flex', gap: '16px', padding: '16px', height: '50%' }}>
-        {/* Main large image - left side */}
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: '16px', 
+        padding: '16px', 
+        height: isMobile ? 'auto' : '50%' 
+      }}>
+        {/* Main large image - left side or top on mobile */}
         <div style={{ 
-          width: '50%',
+          width: isMobile ? '100%' : '50%',
           backgroundColor: '#f3f4f6',
           borderRadius: '12px',
           position: 'relative'
@@ -117,7 +153,7 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
               onClick={() => openPreview(currentIndex)}
               style={{
                 width: '100%',
-                height: '400px',
+                height: isMobile ? '250px' : '400px',
                 objectFit: 'cover',
                 borderRadius: '12px',
                 cursor: 'pointer'
@@ -127,7 +163,7 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
           ) : (
             <div style={{
               width: '100%',
-              height: '400px',
+              height: isMobile ? '250px' : '400px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -140,35 +176,93 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
           )}
         </div>
 
-        {/* Right side 2x2 grid */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1fr 1fr', 
-          gridTemplateRows: '1fr 1fr',
-          gap: '8px', 
-          width: '50%',
-          height: '400px'
-        }}>
-          {[1, 2, 3].map((offset) => (
-            <div key={`grid-${offset}`} style={{ 
-              height: '196px',
+        {/* Right side 2x2 grid or bottom grid on mobile */}
+        {!isMobile && (
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr', 
+            gridTemplateRows: '1fr 1fr',
+            gap: '8px', 
+            width: isMobile ? '100%' : '50%',
+            height: isMobile ? 'auto' : '400px'
+          }}>
+            {[1, 2, 3].map((offset) => (
+              <div key={`grid-${offset}`} style={{ 
+                height: '196px',
+                backgroundColor: '#f3f4f6',
+                borderRadius: '12px',
+                overflow: 'hidden'
+              }}>
+                {displayImages.length > 0 ? (
+                  <img
+                    src={displayImages[0]}
+                    alt={`Car view ${offset}`}
+                    onClick={() => openPreview(0)}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      cursor: 'pointer'
+                    }}
+                    onError={() => handleImageError(`thumb-${offset}`)}
+                  />
+                ) : (
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#6b7280'
+                  }}>
+                    No image
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {/* Last image with overlay */}
+            <div style={{ 
+              height: '196px', 
+              position: 'relative',
               backgroundColor: '#f3f4f6',
               borderRadius: '12px',
               overflow: 'hidden'
             }}>
               {displayImages.length > 0 ? (
-                <img
-                  src={displayImages[0]}
-                  alt={`Car view ${offset}`}
-                  onClick={() => openPreview(0)}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    cursor: 'pointer'
-                  }}
-                  onError={() => handleImageError(`thumb-${offset}`)}
-                />
+                <>
+                  <img
+                    src={displayImages[0]}
+                    alt="Car view 4"
+                    onClick={() => openPreview(0)}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      filter: 'brightness(0.7)',
+                      cursor: 'pointer'
+                    }}
+                    onError={() => handleImageError(`last-${currentIndex}`)}
+                  />
+                  {displayImages.length > 4 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: '24px',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}>
+                      +{displayImages.length - 4}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div style={{
                   width: '100%',
@@ -182,64 +276,8 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
                 </div>
               )}
             </div>
-          ))}
-          
-          {/* Last image with overlay */}
-          <div style={{ 
-            height: '196px', 
-            position: 'relative',
-            backgroundColor: '#f3f4f6',
-            borderRadius: '12px',
-            overflow: 'hidden'
-          }}>
-            {displayImages.length > 0 ? (
-              <>
-                <img
-                  src={displayImages[0]}
-                  alt="Car view 4"
-                  onClick={() => openPreview(0)}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    filter: 'brightness(0.7)',
-                    cursor: 'pointer'
-                  }}
-                  onError={() => handleImageError(`last-${currentIndex}`)}
-                />
-                {displayImages.length > 4 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: '24px',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}>
-                    +{displayImages.length - 4}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#6b7280'
-              }}>
-                No image
-              </div>
-            )}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Full screen preview */}
@@ -275,15 +313,15 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
             }}
             style={{
               position: 'absolute',
-              left: '24px',
+              left: isMobile ? '12px' : '24px',
               backgroundColor: 'white',
               borderRadius: '50%',
-              padding: '12px',
+              padding: isMobile ? '8px' : '12px',
               cursor: 'pointer',
               border: 'none'
             }}
           >
-            <ChevronLeft size={24} />
+            <ChevronLeft size={isMobile ? 18 : 24} />
           </button>
 
           <button
@@ -293,15 +331,15 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
             }}
             style={{
               position: 'absolute',
-              right: '24px',
+              right: isMobile ? '12px' : '24px',
               backgroundColor: 'white',
               borderRadius: '50%',
-              padding: '12px',
+              padding: isMobile ? '8px' : '12px',
               cursor: 'pointer',
               border: 'none'
             }}
           >
-            <ChevronRight size={24} />
+            <ChevronRight size={isMobile ? 18 : 24} />
           </button>
         </div>
       )}
@@ -310,6 +348,9 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
 };
 
 const CarDetails = ({ content }: { content: string }) => {
+  const { width } = useWindowSize();
+  const isMobile = width < 768;
+  
   try {
     if (!content) {
       return <div className="p-4 text-red-500">No car data available</div>;
@@ -340,7 +381,7 @@ const CarDetails = ({ content }: { content: string }) => {
     return (
       <div style={{ 
         minHeight: '100vh', 
-        paddingBottom: '48px' 
+        paddingBottom: isMobile ? '24px' : '48px' 
       }}>
         <div style={{ 
           maxWidth: '1200px', 
@@ -348,41 +389,53 @@ const CarDetails = ({ content }: { content: string }) => {
           padding: '0 16px',
           display: 'flex',
           flexDirection: 'column',
-          height: 'calc(100vh - 48px)',
+          height: isMobile ? 'auto' : 'calc(100vh - 48px)',
           position: 'relative'
         }}>
           {/* Top Half - Image Gallery */}
-          <div style={{ height: '35%', width: '100%', minHeight: '300px' }}>
+          <div style={{ 
+            height: isMobile ? 'auto' : '35%', 
+            width: '100%', 
+            minHeight: isMobile ? '0' : '300px',
+            marginBottom: isMobile ? '30px' : '0'
+          }}>
             <ImageSlideshow images={[car.photo_url]} />
           </div>
 
           {/* Bottom Half - Content */}
           <div style={{ 
-            height: '65%',
-            overflowY: 'auto',
+            height: isMobile ? 'auto' : '65%',
+            overflowY: isMobile ? 'visible' : 'auto',
             position: 'relative',
-            marginTop: '15%'
+            marginTop: isMobile ? '40px' : '15%',
+            paddingBottom: isMobile ? '30px' : '0'
           }}>
             <div style={{ 
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
               gap: '16px',
               paddingLeft: '16px',
               paddingRight: '16px'
             }}>
               {/* Left Column - Car Info */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: isMobile ? 'column' : 'row',
+                  justifyContent: 'space-between', 
+                  alignItems: isMobile ? 'stretch' : 'flex-start',
+                  gap: isMobile ? '16px' : '0'
+                }}>
                   <div style={{
                     background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
                     borderRadius: '0.75rem',
                     padding: '1.25rem',
                     border: '1px solid #e5e7eb',
                     flex: 1,
-                    marginRight: '1rem'
+                    marginRight: isMobile ? '0' : '1rem'
                   }}>
                     <h1 style={{ 
-                      fontSize: '1.675rem', 
+                      fontSize: isMobile ? '1.375rem' : '1.675rem', 
                       fontWeight: 500, 
                       marginBottom: '0.5rem', 
                       lineHeight: '1.2',
@@ -414,7 +467,7 @@ const CarDetails = ({ content }: { content: string }) => {
                     borderRadius: '0.75rem',
                     padding: '1.25rem',
                     border: '1px solid #e5e7eb',
-                    minWidth: '200px'
+                    minWidth: isMobile ? '100%' : '200px'
                   }}>
                     <p style={{ 
                       fontSize: '1.5rem', 
@@ -593,7 +646,8 @@ const CarDetails = ({ content }: { content: string }) => {
                     fontSize: '0.9375rem',
                     lineHeight: '1.6',
                     textAlign: 'justify',
-                    height: '100%',
+                    height: isMobile ? 'auto' : '100%', 
+                    minHeight: isMobile ? '150px' : 'auto',
                     overflow: 'auto'
                   }}>
                     {data.description || "No detailed description available for this vehicle."}
