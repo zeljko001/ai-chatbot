@@ -15,12 +15,14 @@ const carSchema = z.object({
     horsepower: z.string(),
     year: z.string(),
     mileage: z.string(),
-    photo_url: z.string(),
+    photo_url: z.string().optional(),
     damage: z.string(),
     fuel: z.string(),
     cubic_capacity: z.string(),
     url: z.string(),
-    created_at: z.string()
+    created_at: z.string(),
+    location: z.string(),
+    all_photos: z.array(z.string())
   }).optional(),
   analysis: z.object({
     value: z.string(),
