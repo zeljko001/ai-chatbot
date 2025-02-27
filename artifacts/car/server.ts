@@ -7,33 +7,37 @@ import { carPrompt } from "@/lib/ai/prompts";
 
 const carSchema = z.object({
   found: z.boolean(),
-  car: z.object({
-    id: z.number(),
-    name: z.string(),
-    price: z.string(),
-    transmission: z.string(),
-    horsepower: z.string(),
-    year: z.string(),
-    mileage: z.string(),
-    photo_url: z.string().optional(),
-    damage: z.string(),
-    fuel: z.string(),
-    cubic_capacity: z.string(),
-    url: z.string(),
-    created_at: z.string(),
-    location: z.string(),
-    all_photos: z.array(z.string())
-  }).optional(),
-  analysis: z.object({
-    value: z.string(),
-    age: z.string(),
-    condition: z.string(),
-    engine: z.string(),
-    savings: z.number()
-  }).optional(),
-  description: z.string(),
-  message: z.string(),
-  score: z.number()
+  cars: z.array(z.object({
+    car: z.object({
+      id: z.number(),
+      name: z.string(),
+      price: z.string(),
+      transmission: z.string(),
+      horsepower: z.string(),
+      year: z.string(),
+      mileage: z.string(),
+      photo_url: z.string().optional(),
+      damage: z.string(),
+      fuel: z.string(),
+      cubic_capacity: z.string(),
+      url: z.string(),
+      created_at: z.string(),
+      location: z.string(),
+      all_photos: z.array(z.string())
+    }),
+    analysis: z.object({
+      value: z.string(),
+      age: z.string(),
+      condition: z.string(),
+      engine: z.string(),
+      savings: z.number()
+    }).optional(),
+    description: z.string(),
+    message: z.string(),
+    score: z.number()
+  })),
+  count: z.number(),
+  message: z.string()
 });
 
 export const carDocumentHandler = createDocumentHandler<"car">({

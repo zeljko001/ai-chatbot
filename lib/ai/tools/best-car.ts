@@ -1,6 +1,36 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 
+// Define the expected structure of the result
+interface CarResult {
+  car: {
+    id: number;
+    name: string;
+    price: string;
+    transmission: string;
+    horsepower: string;
+    year: string;
+    mileage: string;
+    damage: string;
+    fuel: string;
+    cubic_capacity: string;
+    url: string;
+    all_photos: string[];
+    location: string;
+    created_at: string;
+  };
+  score: number;
+  analysis?: {
+    value: string;
+    age: string;
+    condition: string;
+    engine: string;
+    savings: number;
+  };
+  description: string;
+  message?: string;
+}
+
 export const getBestCar = tool({
   description: 'Get the best car offer based on budget and desired car model',
   parameters: z.object({
@@ -42,7 +72,7 @@ export const getBestCar = tool({
 
       const carData = await response.json();
       
-      if (!carData || !carData.car) {
+      if (!carData || !carData.results || carData.results.length === 0) {
         return {
           found: false,
           message: `No ${name} found within your budget of $${budget}`,
@@ -51,14 +81,18 @@ export const getBestCar = tool({
         };
       }
       
-      // Return a properly formatted response
+      // Return a properly formatted response with multiple cars
       return {
         found: true,
-        car: carData.car,
-        analysis: carData.analysis || null,
-        description: carData.description || '',
-        message: carData.message || '',
-        score: carData.score || 0
+        cars: carData.results.map((result: CarResult) => ({
+          car: result.car,
+          analysis: result.analysis || null,
+          description: result.description || '',
+          message: result.message || '',
+          score: result.score || 0
+        })),
+        count: carData.count,
+        message: carData.message
       };
     } catch (error) {
       console.error('Error fetching car data:', error);

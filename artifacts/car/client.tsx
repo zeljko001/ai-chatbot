@@ -45,7 +45,38 @@ const useWindowSize = () => {
 
 interface CarArtifactMetadata {
   found: boolean;
-  car?: {
+  cars?: {
+    id: number;
+    name: string;
+    price: string;
+    transmission: string;
+    horsepower: string;
+    year: string;
+    mileage: string;
+    photo_url?: string;
+    damage: string;
+    fuel: string;
+    cubic_capacity: string;
+    url: string;
+    created_at: string;
+    location: string;
+    all_photos: string[];
+  }[];
+  analysis?: {
+    value: string;
+    age: string;
+    condition: string;
+    engine: string;
+    savings: number;
+  };
+  description: string;
+  message: string;
+  score: number;
+}
+
+// Define the expected structure of carData
+interface CarResult {
+  car: {
     id: number;
     name: string;
     price: string;
@@ -357,288 +388,274 @@ const CarDetails = ({ content }: { content: string }) => {
     
     const data = typeof content === 'string' ? JSON.parse(content) : content;
     
-    if (!data.found || !data.car) {
+    if (!data.found || !data.cars || data.cars.length === 0) {
       return (
         <div className="p-4 flex flex-col items-center justify-center h-full">
           <div className="text-center p-6 max-w-md">
             <div className="text-3xl mb-4">🚗</div>
-            <h2 className="text-xl font-semibold mb-2">{data.message || "No car found"}</h2>
+            <h2 className="text-xl font-semibold mb-2">{data.message || "No cars found"}</h2>
             <p className="text-gray-600">{data.description || "Try adjusting your search parameters."}</p>
           </div>
         </div>
       );
     }
 
-    const car = data.car;
-    // Osiguramo da imamo siguran niz slika (čak i ako je empty)
-    const carImages = car.all_photos && Array.isArray(car.all_photos) 
-      ? car.all_photos 
-      : (car.photo_url ? [car.photo_url] : []);
-    
     return (
       <div style={{ 
         minHeight: '100vh', 
         paddingBottom: isMobile ? '24px' : '48px' 
       }}>
-        <div style={{ 
-          maxWidth: '1200px', 
-          margin: '0 auto',
-          padding: '0 16px',
-          display: 'flex',
-          flexDirection: 'column',
-          height: isMobile ? 'auto' : 'calc(100vh - 48px)',
-          position: 'relative'
-        }}>
-          {/* Top Half - Image Gallery */}
-          <div style={{ 
-            height: isMobile ? 'auto' : '35%', 
-            width: '100%', 
-            minHeight: isMobile ? '0' : '300px',
-            marginBottom: isMobile ? '30px' : '0'
-          }}>
-            <ImageSlideshow images={carImages} />
-          </div>
-
-          {/* Bottom Half - Content */}
-          <div style={{ 
-            height: isMobile ? 'auto' : '65%',
-            overflowY: isMobile ? 'visible' : 'auto',
-            position: 'relative',
-            marginTop: isMobile ? '40px' : '15%',
-            paddingBottom: isMobile ? '30px' : '0'
-          }}>
-            {/* Car Name & Price Cards */}
-            <div style={{
+        {data.cars.map((carData: CarResult, index: number) => {
+          const car = carData.car;
+          const carImages = car.all_photos && Array.isArray(car.all_photos) 
+            ? car.all_photos 
+            : (car.photo_url ? [car.photo_url] : []);
+          
+          return (
+            <div key={index} style={{ 
+              maxWidth: '1200px', 
+              margin: '0 auto',
+              padding: '16px',
               display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              gap: '16px',
-              marginBottom: '16px'
+              flexDirection: 'column',
+              height: isMobile ? 'auto' : 'calc(100vh - 48px)',
+              position: 'relative',
+              marginBottom: '24px',
+              border: '2px solid rgb(157, 182, 217)',
+              borderRadius: '8px',
+              boxShadow: '0 6px 8px rgba(0, 0, 0, 0.1)'
             }}>
-              {/* Car Name Card */}
-              <div style={{
-                flex: 2,
-                background: 'linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%)',
-                borderRadius: '0.75rem',
-                padding: '1.25rem',
-                border: '1px solid #bae6fd',
-                marginBottom: isMobile ? '12px' : '0'
+              {/* Top Half - Image Gallery */}
+              <div style={{ 
+                height: isMobile ? 'auto' : '35%', 
+                width: '100%', 
+                minHeight: isMobile ? '0' : '300px',
+                marginBottom: isMobile ? '30px' : '0'
               }}>
-                <h1 style={{ 
-                  fontSize: isMobile ? '1.25rem' : '1.5rem', 
-                  fontWeight: 700, 
-                  color: '#0369a1',
-                  marginBottom: '0.5rem'
-                }}>{car.name}</h1>
-                
-                {/* Dodajemo lokaciju */}
+                <ImageSlideshow images={carImages} />
+              </div>
+
+              {/* Bottom Half - Content */}
+              <div style={{ 
+                height: isMobile ? 'auto' : '65%',
+                overflowY: isMobile ? 'visible' : 'auto',
+                position: 'relative',
+                marginTop: isMobile ? '40px' : '15%',
+                paddingBottom: isMobile ? '30px' : '0'
+              }}>
+                {/* Car Name & Price Cards */}
                 <div style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  color: '#0284c7',
-                  fontSize: '0.875rem',
-                  marginTop: '8px'
+                  flexDirection: isMobile ? 'column' : 'row',
+                  gap: '16px',
+                  marginBottom: '16px'
                 }}>
-                  <span style={{ marginRight: '6px' }}>📍</span>
-                  <span>{car.location || "Nije navedeno"}</span>
-                </div>
-              </div>
-
-              {/* Price Card */}
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                gap: '0.75rem',
-                background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
-                borderRadius: '0.75rem',
-                padding: '1.25rem',
-                border: '1px solid #e5e7eb',
-                minWidth: isMobile ? '100%' : '200px'
-              }}>
-                <p style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: 700, 
-                  lineHeight: '1.2', 
-                  color: '#111827',
-                  textAlign: 'center'
-                }}>
-                  {car.price}
-                </p>
-                <div className={`flex items-center justify-center px-4 py-2 rounded-full ${getScoreColor(data.score)}`}>
-                  <span className="font-semibold">{Math.round(data.score)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Car Specifications */}
-            <div style={{
-              background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
-              borderRadius: '0.75rem',
-              padding: '1.25rem',
-              border: '1px solid #e5e7eb'
-            }}>
-              <h2 style={{ 
-                fontSize: '1.25rem', 
-                fontWeight: 600, 
-                marginBottom: '0.75rem',
-                color: '#111827'
-              }}>Specifications</h2>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(2, 1fr)', 
-                gap: '1rem',
-                background: 'white',
-                borderRadius: '0.5rem',
-                padding: '1rem',
-                border: '1px solid #e5e7eb'
-              }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Year:</span>
-                    <span style={{ fontWeight: 500, color: '#111827' }}>{car.year}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Mileage:</span>
-                    <span style={{ fontWeight: 500, color: '#111827' }}>{car.mileage}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Engine:</span>
-                    <span style={{ fontWeight: 500, color: '#111827' }}>{car.cubic_capacity}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Horsepower:</span>
-                    <span style={{ fontWeight: 500, color: '#111827' }}>{car.horsepower}</span>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Fuel:</span>
-                    <span style={{ fontWeight: 500, color: '#111827' }}>{car.fuel}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Transmission:</span>
-                    <span style={{ fontWeight: 500, color: '#111827' }}>{car.transmission}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Damage:</span>
-                    <span style={{ fontWeight: 500, color: '#111827' }}>{car.damage}</span>
-                  </div>
-                  {car.url && (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                      <a
-                        href={car.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          color: '#3b82f6',
-                          fontSize: '0.875rem',
-                          textDecoration: 'none',
-                          padding: '0.5rem 0.75rem',
-                          borderRadius: '0.5rem',
-                          transition: 'all 0.2s',
-                          backgroundColor: '#f9fafb',
-                          border: '1px solid #e5e7eb'
-                        }}
-                      >
-                        View listing
-                        <span className="ml-1">↗</span>
-                      </a>
+                  {/* Car Name Card */}
+                  <div style={{
+                    flex: 2,
+                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%)',
+                    borderRadius: '0.75rem',
+                    padding: '1.25rem',
+                    border: '1px solid #bae6fd',
+                    marginBottom: isMobile ? '12px' : '0'
+                  }}>
+                    <h1 style={{ 
+                      fontSize: isMobile ? '1.25rem' : '1.5rem', 
+                      fontWeight: 700, 
+                      color: '#0369a1',
+                      marginBottom: '0.5rem'
+                    }}>{car.name}</h1>
+                    
+                    {/* Dodajemo lokaciju */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: '#0284c7',
+                      fontSize: '0.875rem',
+                      marginTop: '8px'
+                    }}>
+                      <span style={{ marginRight: '6px' }}>📍</span>
+                      <span>{car.location || "Nije navedeno"}</span>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
+                  </div>
 
-            {/* Analysis Card */}
-            {data.analysis && (
-              <div style={{
-                background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
-                borderRadius: '0.75rem',
-                padding: '1.25rem',
-                border: '1px solid #e5e7eb'
-              }}>
-                <h2 style={{ 
-                  fontSize: '1.25rem', 
-                  fontWeight: 600, 
-                  marginBottom: '0.75rem',
-                  color: '#111827'
-                }}>Analysis</h2>
-                <div style={{ 
-                  background: 'white',
-                  borderRadius: '0.5rem',
-                  padding: '1rem',
-                  border: '1px solid #e5e7eb',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.75rem'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Value:</span>
-                    <span style={{ fontWeight: 500, color: '#111827' }}>{data.analysis.value}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Age:</span>
-                    <span style={{ fontWeight: 500, color: '#111827' }}>{data.analysis.age}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Condition:</span>
-                    <span style={{ fontWeight: 500, color: '#111827' }}>{data.analysis.condition}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Engine:</span>
-                    <span style={{ fontWeight: 500, color: '#111827' }}>{data.analysis.engine}</span>
-                  </div>
+                  {/* Price Card */}
                   <div style={{ 
                     display: 'flex', 
-                    justifyContent: 'space-between',
-                    padding: '0.5rem',
-                    backgroundColor: '#f0fdf4',
-                    borderRadius: '0.375rem',
-                    border: '1px solid #dcfce7'
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    gap: '0.75rem',
+                    background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
+                    borderRadius: '0.75rem',
+                    padding: '1.25rem',
+                    border: '1px solid #e5e7eb',
+                    minWidth: isMobile ? '100%' : '200px'
                   }}>
-                    <span style={{ color: '#166534', fontSize: '0.875rem', fontWeight: 500 }}>Potential Savings:</span>
-                    <span style={{ fontWeight: 600, color: '#166534' }}>${data.analysis.savings}</span>
+                    <p style={{ 
+                      fontSize: '1.5rem', 
+                      fontWeight: 700, 
+                      lineHeight: '1.2', 
+                      color: '#111827',
+                      textAlign: 'center'
+                    }}>
+                      {car.price}
+                    </p>
+                    <div className={`flex items-center justify-center px-4 py-2 rounded-full ${getScoreColor(carData.score)}`}>
+                      <span className="font-semibold">{Math.round(carData.score)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Car Specifications */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
+                  borderRadius: '0.75rem',
+                  padding: '1.25rem',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <h2 style={{ 
+                    fontSize: '1.25rem', 
+                    fontWeight: 600, 
+                    marginBottom: '0.75rem',
+                    color: '#111827'
+                  }}>Specifications</h2>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(2, 1fr)', 
+                    gap: '1rem',
+                    background: 'white',
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Year:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.year}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Mileage:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.mileage}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Engine:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.cubic_capacity}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Horsepower:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.horsepower}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Transmission:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.transmission}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Fuel:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.fuel}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Damage:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.damage}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Location:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.location}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Analysis Card */}
+                {carData.analysis && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
+                    borderRadius: '0.75rem',
+                    padding: '1.25rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <h2 style={{ 
+                      fontSize: '1.25rem', 
+                      fontWeight: 600, 
+                      marginBottom: '0.75rem',
+                      color: '#111827'
+                    }}>Analysis</h2>
+                    <div style={{ 
+                      background: 'white',
+                      borderRadius: '0.5rem',
+                      padding: '1rem',
+                      border: '1px solid #e5e7eb',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.75rem'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Value:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{carData.analysis.value}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Age:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{carData.analysis.age}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Condition:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{carData.analysis.condition}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Engine:</span>
+                        <span style={{ fontWeight: 500, color: '#111827' }}>{carData.analysis.engine}</span>
+                      </div>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        padding: '0.5rem',
+                        backgroundColor: '#f0fdf4',
+                        borderRadius: '0.375rem',
+                        border: '1px solid #dcfce7'
+                      }}>
+                        <span style={{ color: '#166534', fontSize: '0.875rem', fontWeight: 500 }}>Potential Savings:</span>
+                        <span style={{ fontWeight: 600, color: '#166534' }}>${carData.analysis.savings}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Description Card */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
+                  borderRadius: '0.75rem',
+                  padding: '1.25rem',
+                  border: '1px solid #e5e7eb',
+                  flex: 1
+                }}>
+                  <h2 style={{ 
+                    fontSize: '1.25rem', 
+                    fontWeight: 600, 
+                    marginBottom: '0.75rem',
+                    color: '#111827'
+                  }}>Description</h2>
+                  <div style={{ 
+                    background: 'white',
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    border: '1px solid #e5e7eb',
+                    color: '#4b5563',
+                    fontSize: '0.9375rem',
+                    lineHeight: '1.6',
+                    textAlign: 'justify',
+                    height: isMobile ? 'auto' : '100%', 
+                    minHeight: isMobile ? '150px' : 'auto',
+                    overflow: 'auto'
+                  }}>
+                    {carData.description || "No detailed description available for this vehicle."}
                   </div>
                 </div>
               </div>
-            )}
-
-            {/* Description Card */}
-            <div style={{
-              background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
-              borderRadius: '0.75rem',
-              padding: '1.25rem',
-              border: '1px solid #e5e7eb',
-              flex: 1
-            }}>
-              <h2 style={{ 
-                fontSize: '1.25rem', 
-                fontWeight: 600, 
-                marginBottom: '0.75rem',
-                color: '#111827'
-              }}>Description</h2>
-              <div style={{ 
-                background: 'white',
-                borderRadius: '0.5rem',
-                padding: '1rem',
-                border: '1px solid #e5e7eb',
-                color: '#4b5563',
-                fontSize: '0.9375rem',
-                lineHeight: '1.6',
-                textAlign: 'justify',
-                height: isMobile ? 'auto' : '100%', 
-                minHeight: isMobile ? '150px' : 'auto',
-                overflow: 'auto'
-              }}>
-                {data.description || "No detailed description available for this vehicle."}
-              </div>
             </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
     );
   } catch (e) {
