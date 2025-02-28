@@ -82,7 +82,7 @@ export function CarPreview({ result }: { result: { found: boolean, cars: CarResu
                   return 'bg-gray-100 text-gray-700'
                 })()
               }`}>
-                Score: {carData.score}
+                ID: {carData.car.id}
               </span>
             </div>
             <div className="text-sm text-muted-foreground space-y-0.5">

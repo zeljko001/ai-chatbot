@@ -81,4 +81,47 @@ const PureCarResult = ({ result }: CarResultProps) => {
   );
 };
 
-export const CarResult = memo(PureCarResult); 
+export const CarResult = memo(PureCarResult);
+
+// Add this interface to match the response from getCarChanges tool
+interface CarChangesResultProps {
+  result: {
+    found: boolean;
+    carName: string;
+    changes: string[];
+    message: string;
+    description?: string;
+  };
+}
+
+// Add this component and export it
+export const CarChangesResult = ({ result }: CarChangesResultProps) => {
+  if (!result.found) {
+    return (
+      <div className="rounded-lg border p-4">
+        <p className="text-muted-foreground">{result.message}</p>
+        {result.description && <p className="text-sm mt-2">{result.description}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border p-4 space-y-4">
+      <div>
+        <h3 className="font-semibold">{result.carName}</h3>
+        <p className="text-muted-foreground">{result.message}</p>
+      </div>
+      
+      {result.changes && result.changes.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Change History:</h4>
+          <ul className="space-y-1 text-sm">
+            {result.changes.map((change, index) => (
+              <li key={index} className="px-3 py-2 rounded bg-muted">{change}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}; 

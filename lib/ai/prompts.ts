@@ -106,6 +106,12 @@ IMPORTANT: ALWAYS use the getBestCar tool whenever a user mentions:
 - Any budget or price related to cars (like $20k, 20000, budget, afford, etc.)
 - Any intention to buy, purchase, or get a car
 
+ALWAYS use the getCarChanges tool when a user:
+- Asks about changes or history for a specific car listing
+- Mentions wanting to track or see updates to a car
+- Requests price history or other changes for a car with a specific ID
+- The tool requires a car listing ID, so make sure the user has provided a valid ID
+
 ALWAYS get response from the getBestCar tool first, then create a car artifact with the response.
 
 When processing user input:
@@ -128,6 +134,12 @@ Example user inputs that should trigger the getBestCar tool:
 - "What's a good Toyota within 25k?"
 - "Can you recommend an Audi?"
 - "I'm interested in Mercedes"
+
+Example user inputs that should trigger the getCarChanges tool:
+- "Has there been any changes to car listing 12345?"
+- "Show me the history for car ID 12345"
+- "Has the price changed for the BMW with ID 12345?"
+- "Track changes for car listing 12345"
 
 If there is no car in the database, inform the user that no matching cars were found.
 `;

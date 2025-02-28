@@ -31,6 +31,12 @@ interface CarResult {
   message?: string;
 }
 
+// Define the car changes response structure
+interface CarChangesResult {
+  carName: string;
+  changes: string[];
+}
+
 export const getBestCar = tool({
   description: 'Get the best car offer based on budget and desired car model',
   parameters: z.object({
@@ -101,6 +107,64 @@ export const getBestCar = tool({
         message: 'Failed to process your car search request',
         description: 'There was a technical issue with the car search service. Please try again later.',
         score: 0
+      };
+    }
+  },
+});
+
+export const getCarChanges = tool({
+  description: 'Get changes history for a specific car listing',
+  parameters: z.object({
+    id: z.number().describe('The ID of the car listing to check for changes'),
+  }),
+  execute: async ({ id }) => {
+    console.log(`Checking changes for car listing with ID: ${id}`);
+    
+    try {
+      const response = await fetch(
+        'http://localhost:3001/api/changes',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id })
+        }
+      );
+
+      if (!response.ok) {
+        console.error(`API error: ${response.status} ${response.statusText}`);
+        return {
+          found: false,
+          message: `Failed to fetch car changes: ${response.statusText}`,
+          description: 'The car changes service is currently unavailable. Please try again later.'
+        };
+      }
+
+      const changesData: CarChangesResult = await response.json();
+      
+      if (!changesData || !changesData.changes || changesData.changes.length === 0) {
+        return {
+          found: false,
+          message: `No changes found for car listing with ID: ${id}`,
+          description: 'This car listing has not had any recorded changes.',
+          carName: changesData.carName || 'Unknown car'
+        };
+      }
+      
+      // Return a properly formatted response with the changes
+      return {
+        found: true,
+        carName: changesData.carName,
+        changes: changesData.changes,
+        message: `Found ${changesData.changes.length} changes for ${changesData.carName}`
+      };
+    } catch (error) {
+      console.error('Error fetching car changes:', error);
+      return {
+        found: false,
+        message: 'Failed to process your car changes request',
+        description: 'There was a technical issue with the car changes service. Please try again later.'
       };
     }
   },

@@ -25,7 +25,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { MessageEditor } from './message-editor';
 import { DocumentPreview } from './document-preview';
 import { MessageReasoning } from './message-reasoning';
-import { CarResult } from './car-result';
+import { CarResult, CarChangesResult } from './car-result';
 
 const PurePreviewMessage = ({
   chatId,
@@ -152,6 +152,8 @@ const PurePreviewMessage = ({
                           <Weather weatherAtLocation={result} />
                         ) : toolName === 'getBestCar' ? (
                           <CarResult result={result} />
+                        ) : toolName === 'getCarChanges' ? (
+                          <CarChangesResult result={result} />
                         ) : toolName === 'createDocument' ? (
                           <DocumentPreview
                             isReadonly={isReadonly}
@@ -186,6 +188,8 @@ const PurePreviewMessage = ({
                         <Weather />
                       ) : toolName === 'getBestCar' ? (
                         <CarResult result={args} /> 
+                      ) : toolName === 'getCarChanges' ? (
+                        <CarChangesResult result={args} />
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview isReadonly={isReadonly} args={args} />
                       ) : toolName === 'updateDocument' ? (
