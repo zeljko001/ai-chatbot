@@ -45,7 +45,7 @@ export function CarPreview({ result }: { result: { found: boolean, cars: CarResu
   }
 
   return (
-    <div className="flex flex-col gap-2 overflow-y-auto max-h-screen">
+    <div className="flex flex-col gap-2">
       {result.cars.map((carData, i) => (
         <div 
           key={i}
@@ -82,7 +82,7 @@ export function CarPreview({ result }: { result: { found: boolean, cars: CarResu
                   return 'bg-gray-100 text-gray-700'
                 })()
               }`}>
-                ID: {carData.car.id}
+                Score: {carData.score}
               </span>
             </div>
             <div className="text-sm text-muted-foreground space-y-0.5">
