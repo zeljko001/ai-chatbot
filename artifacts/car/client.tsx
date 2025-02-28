@@ -2,6 +2,7 @@ import { Artifact } from "@/components/create-artifact";
 import { toast } from "sonner";
 import { CopyIcon, RedoIcon, UndoIcon } from '@/components/icons';
 import { useState, useEffect, useCallback } from 'react';
+import { ExternalLink } from 'lucide-react';
 
 // Define missing icons inline
 const ChevronLeft = ({ size = 24 }: { size?: number }) => (
@@ -383,7 +384,25 @@ const CarDetails = ({ content }: { content: string }) => {
   
   try {
     if (!content) {
-      return <div className="p-4 text-red-500">No car data available</div>;
+      return (
+        <div className="p-4 flex flex-col items-center justify-center h-full">
+          <div className="text-center p-6 max-w-md">
+            <div className="text-3xl mb-4">🚫</div>
+            <h2 className="text-xl font-semibold mb-2 text-red-500">Car Not Found</h2>
+            <p className="text-gray-600">
+              The requested car could not be found. This may be because:
+            </p>
+            <ul className="text-gray-600 mt-2 list-disc list-inside">
+              <li><strong>Car model/brand was not specified</strong></li>
+              <li><strong>Budget information was not provided</strong></li>
+              <li><strong>No matching cars exist for the given criteria</strong></li>
+            </ul>
+            <p className="text-gray-600 mt-2">
+              Please ensure you provide both the car model and your budget to get relevant results.
+            </p>
+          </div>
+        </div>
+      );
     }
     
     const data = typeof content === 'string' ? JSON.parse(content) : content;
@@ -448,7 +467,8 @@ const CarDetails = ({ content }: { content: string }) => {
                   display: 'flex',
                   flexDirection: isMobile ? 'column' : 'row',
                   gap: '16px',
-                  marginBottom: '16px'
+                  marginBottom: '16px',
+                  position: 'relative'
                 }}>
                   {/* Car Name Card */}
                   <div style={{
@@ -457,7 +477,8 @@ const CarDetails = ({ content }: { content: string }) => {
                     borderRadius: '0.75rem',
                     padding: '1.25rem',
                     border: '1px solid #bae6fd',
-                    marginBottom: isMobile ? '12px' : '0'
+                    marginBottom: isMobile ? '12px' : '0',
+                    position: 'relative'
                   }}>
                     <h1 style={{ 
                       fontSize: isMobile ? '1.25rem' : '1.5rem', 
@@ -477,6 +498,32 @@ const CarDetails = ({ content }: { content: string }) => {
                       <span style={{ marginRight: '6px' }}>📍</span>
                       <span>{car.location || "Nije navedeno"}</span>
                     </div>
+
+                    {/* External Link positioned in the bottom right corner */}
+                    <a
+                      href={car.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        position: 'absolute',
+                        bottom: '10px',
+                        right: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        color: '#3b82f6',
+                        fontSize: '0.875rem',
+                        textDecoration: 'none',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '0.5rem',
+                        transition: 'all 0.2s',
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb'
+                      }}
+                    >
+                      Visit Website
+                      <ExternalLink size={14} />
+                    </a>
                   </div>
 
                   {/* Price Card */}
