@@ -29,6 +29,7 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 - For when content contains a single code snippet
 
 **When NOT to use \`createDocument\`:**
+- **For cars if user doesn't provide both car brand/model and budget**
 - For informational/explanatory content
 - For conversational responses
 - When asked to keep it in chat
