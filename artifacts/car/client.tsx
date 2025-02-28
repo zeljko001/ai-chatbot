@@ -17,11 +17,16 @@ const ChevronRight = ({ size = 24 }: { size?: number }) => (
   </svg>
 );
 
-// Add a useWindowSize hook for responsive design
+// Enhanced useWindowSize hook with responsive breakpoints
 const useWindowSize = () => {
+  // Default to desktop values for SSR
   const [windowSize, setWindowSize] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 0,
-    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
+    height: typeof window !== 'undefined' ? window.innerHeight : 800,
+    isMobile: false,      // < 480px
+    isTablet: false,      // 481px - 768px
+    isLaptop: false,      // 769px - 1024px
+    isDesktop: false,     // > 1025px
   });
 
   useEffect(() => {
@@ -29,9 +34,16 @@ const useWindowSize = () => {
     if (typeof window === 'undefined') return;
 
     const handleResize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      
       setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width,
+        height,
+        isMobile: width <= 480,
+        isTablet: width > 480 && width <= 768,
+        isLaptop: width > 768 && width <= 1024,
+        isDesktop: width > 1024,
       });
     };
 
@@ -115,17 +127,18 @@ const getScoreColor = (score: number) => {
   return "bg-red-500/20 text-red-700";
 };
 
-// Image Slideshow Component
+// Enhanced responsive ImageSlideshow Component
 const ImageSlideshow = ({ images }: { images: string[] }) => {
-  const { width } = useWindowSize();
-  const isMobile = width < 768;
+  const { isMobile, isTablet, width } = useWindowSize();
+  const isSmallScreen = isMobile || isTablet;
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previewIndex, setPreviewIndex] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [touchStart, setTouchStart] = useState<number | null>(null);
   
-  // Koristimo sve slike ako su dostupne
+  // Use all available images
   const displayImages = images && images.length > 0 ? images : [];
 
   const handleImageError = (key: string) => {
@@ -142,11 +155,38 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
   const nextImage = () => setPreviewIndex((i) => (i + 1) % displayImages.length);
   const prevImage = () => setPreviewIndex((i) => (i - 1 + displayImages.length) % displayImages.length);
 
+  // Handle keyboard navigation for image preview
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') setShowPreview(false);
     if (e.key === 'ArrowRight') nextImage();
     if (e.key === 'ArrowLeft') prevImage();
   }, []);
+
+  // Touch event handlers for swipe navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    
+    const touchEnd = e.touches[0].clientX;
+    const diff = touchStart - touchEnd;
+    
+    // Minimum distance to be considered a swipe (in pixels)
+    const minSwipeDistance = 50;
+    
+    if (Math.abs(diff) > minSwipeDistance) {
+      if (diff > 0) {
+        // Swipe left, go to next image
+        nextImage();
+      } else {
+        // Swipe right, go to previous image
+        prevImage();
+      }
+      setTouchStart(null);
+    }
+  };
 
   useEffect(() => {
     if (showPreview) {
@@ -155,71 +195,136 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
     }
   }, [showPreview, handleKeyPress]);
 
+  // Main container style with responsive adjustments
+  const containerStyle = {
+    width: '100%',
+    position: 'relative' as const,
+  };
+
+  // Gallery layout style based on screen size
+  const galleryStyle = {
+    display: 'flex' as const,
+    flexDirection: isSmallScreen ? 'column' as const : 'row' as const,
+    gap: '1rem',
+    padding: isSmallScreen ? '0.75rem' : '1rem',
+    height: isSmallScreen ? 'auto' : '50%',
+  };
+
+  // Main image container style 
+  const mainImageContainerStyle = {
+    width: isSmallScreen ? '100%' : '50%',
+    backgroundColor: '#f3f4f6',
+    borderRadius: '0.75rem',
+    position: 'relative' as const,
+  };
+
+  // Main image style with responsive height
+  const mainImageStyle = {
+    width: '100%',
+    height: isSmallScreen ? '15rem' : '25rem',
+    objectFit: 'cover' as const,
+    borderRadius: '0.75rem',
+    cursor: 'pointer',
+  };
+
+  // No image placeholder style
+  const noImageStyle = {
+    width: '100%',
+    height: isSmallScreen ? '15rem' : '25rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f3f4f6',
+    color: '#6b7280',
+    borderRadius: '0.75rem',
+  };
+
+  // Thumbnail grid container style
+  const thumbnailGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gridTemplateRows: '1fr 1fr',
+    gap: '0.5rem',
+    width: isSmallScreen ? '100%' : '50%',
+    height: isSmallScreen ? 'auto' : '25rem',
+  };
+
+  // Thumbnail container style
+  const thumbnailStyle = {
+    height: isSmallScreen ? '10rem' : '12.25rem',
+    backgroundColor: '#f3f4f6',
+    borderRadius: '0.75rem',
+    overflow: 'hidden',
+  };
+
+  // Preview modal style
+  const previewModalStyle = {
+    position: 'fixed' as const,
+    inset: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 50,
+  };
+
+  // Preview image style
+  const previewImageStyle = {
+    maxHeight: '85vh',
+    maxWidth: '90vw',
+    objectFit: 'contain' as const,
+  };
+
+  // Navigation button base style
+  const navButtonBaseStyle = {
+    position: 'absolute' as const,
+    backgroundColor: 'white',
+    borderRadius: '50%',
+    padding: isSmallScreen ? '0.5rem' : '0.75rem',
+    cursor: 'pointer',
+    border: 'none',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+  };
+
+  // Left arrow button style
+  const prevButtonStyle = {
+    ...navButtonBaseStyle,
+    left: isSmallScreen ? '0.75rem' : '1.5rem',
+  };
+
+  // Right arrow button style
+  const nextButtonStyle = {
+    ...navButtonBaseStyle,
+    right: isSmallScreen ? '0.75rem' : '1.5rem',
+  };
+
   return (
-    <div style={{ width: '100%', position: 'relative' }}>
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: isMobile ? 'column' : 'row',
-        gap: '16px', 
-        padding: '16px', 
-        height: isMobile ? 'auto' : '50%' 
-      }}>
-        {/* Main large image - left side or top on mobile */}
-        <div style={{ 
-          width: isMobile ? '100%' : '50%',
-          backgroundColor: '#f3f4f6',
-          borderRadius: '12px',
-          position: 'relative'
-        }}>
+    <div style={containerStyle}>
+      <div style={galleryStyle}>
+        {/* Main large image - left side or top on smaller screens */}
+        <div style={mainImageContainerStyle}>
           {displayImages.length > 0 ? (
             <img
               src={displayImages[currentIndex]}
               alt="Main car view"
               onClick={() => openPreview(currentIndex)}
-              style={{
-                width: '100%',
-                height: isMobile ? '250px' : '400px',
-                objectFit: 'cover',
-                borderRadius: '12px',
-                cursor: 'pointer'
-              }}
+              style={mainImageStyle}
               onError={() => handleImageError(`main-${currentIndex}`)}
             />
           ) : (
-            <div style={{
-              width: '100%',
-              height: isMobile ? '250px' : '400px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#f3f4f6',
-              color: '#6b7280',
-              borderRadius: '12px'
-            }}>
+            <div style={noImageStyle}>
               No image available
             </div>
           )}
         </div>
 
-        {/* Right side 2x2 grid or bottom grid on mobile */}
+        {/* Thumbnail grid - right side or hidden on very small screens */}
         {!isMobile && (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1fr 1fr', 
-            gridTemplateRows: '1fr 1fr',
-            gap: '8px', 
-            width: isMobile ? '100%' : '50%',
-            height: isMobile ? 'auto' : '400px'
-          }}>
+          <div style={thumbnailGridStyle}>
             {[1, 2, 3].map((offset, index) => {
               const imgIndex = (currentIndex + offset) % displayImages.length;
               return (
-                <div key={`grid-${offset}`} style={{ 
-                  height: '196px',
-                  backgroundColor: '#f3f4f6',
-                  borderRadius: '12px',
-                  overflow: 'hidden'
-                }}>
+                <div key={`grid-${offset}`} style={thumbnailStyle}>
                   {displayImages.length > imgIndex ? (
                     <img
                       src={displayImages[imgIndex]}
@@ -249,13 +354,10 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
               );
             })}
             
-            {/* Last image with overlay */}
+            {/* Last image with overlay for additional images */}
             <div style={{ 
-              height: '196px', 
+              ...thumbnailStyle,
               position: 'relative',
-              backgroundColor: '#f3f4f6',
-              borderRadius: '12px',
-              overflow: 'hidden'
             }}>
               {displayImages.length > 4 ? (
                 <>
@@ -285,7 +387,7 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         color: 'white',
-                        fontSize: '24px',
+                        fontSize: '1.5rem',
                         fontWeight: 600,
                         cursor: 'pointer'
                       }}
@@ -311,29 +413,19 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
         )}
       </div>
 
-      {/* Full screen preview */}
+      {/* Full screen preview with touch navigation */}
       {showPreview && displayImages.length > 0 && (
         <div 
           onClick={() => setShowPreview(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 50
-          }}
+          style={previewModalStyle}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
         >
           <div onClick={e => e.stopPropagation()}>
             <img
               src={displayImages[previewIndex]}
               alt="Preview"
-              style={{
-                maxHeight: '90vh',
-                maxWidth: '90vw',
-                objectFit: 'contain'
-              }}
+              style={previewImageStyle}
             />
           </div>
 
@@ -342,17 +434,10 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
               e.stopPropagation();
               prevImage();
             }}
-            style={{
-              position: 'absolute',
-              left: isMobile ? '12px' : '24px',
-              backgroundColor: 'white',
-              borderRadius: '50%',
-              padding: isMobile ? '8px' : '12px',
-              cursor: 'pointer',
-              border: 'none'
-            }}
+            style={prevButtonStyle}
+            aria-label="Previous image"
           >
-            <ChevronLeft size={isMobile ? 18 : 24} />
+            <ChevronLeft size={isSmallScreen ? 18 : 24} />
           </button>
 
           <button
@@ -360,17 +445,10 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
               e.stopPropagation();
               nextImage();
             }}
-            style={{
-              position: 'absolute',
-              right: isMobile ? '12px' : '24px',
-              backgroundColor: 'white',
-              borderRadius: '50%',
-              padding: isMobile ? '8px' : '12px',
-              cursor: 'pointer',
-              border: 'none'
-            }}
+            style={nextButtonStyle}
+            aria-label="Next image"
           >
-            <ChevronRight size={isMobile ? 18 : 24} />
+            <ChevronRight size={isSmallScreen ? 18 : 24} />
           </button>
         </div>
       )}
@@ -378,9 +456,33 @@ const ImageSlideshow = ({ images }: { images: string[] }) => {
   );
 };
 
+// Add a media query helper for laptops
+const useLaptopMediaQuery = () => {
+  const [isLaptopExact, setIsLaptopExact] = useState(false);
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const mediaQuery = window.matchMedia('(min-width: 1000px) and (max-width: 1100px) and (min-height: 800px) and (max-height: 900px)');
+    
+    const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      setIsLaptopExact(e.matches);
+    };
+    
+    handleChange(mediaQuery); // Initial check
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+  
+  return isLaptopExact;
+};
+
+// Responsive CarDetails component
 const CarDetails = ({ content }: { content: string }) => {
-  const { width } = useWindowSize();
-  const isMobile = width < 768;
+  const { isMobile, isTablet, isLaptop, width } = useWindowSize();
+  const isLaptopExact = useLaptopMediaQuery(); // Use our exact laptop size detector
+  const isSmallScreen = isMobile || isTablet;
   
   try {
     if (!content) {
@@ -419,11 +521,214 @@ const CarDetails = ({ content }: { content: string }) => {
       );
     }
 
+    // Update container style for laptop
+    const containerStyle = {
+      minHeight: '100vh',
+      paddingBottom: isSmallScreen ? '1.5rem' : '3rem',
+    };
+
+    // Update car card style to be fully auto-sized for laptop
+    const carCardStyle = {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: isSmallScreen ? '0.75rem' : '1rem',
+      display: 'flex',
+      flexDirection: 'column' as 'column',
+      height: isLaptopExact ? 'auto' : (isSmallScreen ? 'auto' : 'calc(100vh - 3rem)'),
+      position: 'relative' as const,
+      marginBottom: '1.5rem',
+      border: '2px solid rgb(157, 182, 217)',
+      borderRadius: '0.5rem',
+      boxShadow: '0 6px 8px rgba(0, 0, 0, 0.1)',
+    };
+
+    // Gallery section style - fixed height for laptops
+    const galleryStyle = {
+      height: isLaptopExact ? '400px' : (isSmallScreen ? 'auto' : '35%'),
+      width: '100%',
+      minHeight: isSmallScreen || isLaptopExact ? '0' : '18.75rem',
+      marginBottom: isLaptopExact ? '2rem' : (isSmallScreen ? '1.875rem' : '0'),
+    };
+
+    // Content section style
+    const contentStyle = {
+      height: isLaptopExact ? 'auto' : (isSmallScreen ? 'auto' : '65%'),
+      overflowY: isLaptopExact ? 'visible' as const : (isSmallScreen ? 'visible' as const : 'auto' as const),
+      position: 'relative' as const,
+      marginTop: isLaptopExact ? '0' : (isSmallScreen ? '2.5rem' : '15%'),
+      paddingBottom: isSmallScreen ? '1.875rem' : '0',
+    };
+
+    // Card layout style for name & price
+    const cardLayoutStyle = {
+      display: 'flex',
+      flexDirection: isSmallScreen ? 'column' as const : 'row' as const,
+      gap: '1rem',
+      marginBottom: '1rem',
+      position: 'relative' as const,
+    };
+
+    // Car name card style
+    const nameCardStyle = {
+      flex: 2,
+      background: 'linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%)',
+      borderRadius: '0.75rem',
+      padding: '1.25rem',
+      paddingBottom: isLaptopExact ? '3.5rem' : (isSmallScreen ? '3rem' : '2.5rem'),
+      paddingRight: isLaptopExact ? '2rem' : '1.25rem',
+      border: '1px solid #bae6fd',
+      marginBottom: isSmallScreen ? '0.75rem' : '0',
+      position: 'relative' as const,
+    };
+
+    // Car name heading style
+    const nameHeadingStyle = {
+      fontSize: isSmallScreen ? '1.25rem' : '1.5rem',
+      fontWeight: 700,
+      color: '#0369a1',
+      marginBottom: '0.5rem',
+    };
+
+    // Location style
+    const locationStyle = {
+      display: 'flex',
+      alignItems: 'center',
+      color: '#0284c7',
+      fontSize: '0.875rem',
+      marginTop: '0.5rem',
+    };
+
+    // External link style with enhanced responsive positioning
+    const externalLinkStyle = {
+      position: 'absolute' as const,
+      bottom: '0.625rem',
+      right: '0.625rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.25rem',
+      color: '#3b82f6',
+      fontSize: isLaptopExact ? '0.75rem' : (isSmallScreen ? '0.75rem' : '0.875rem'),
+      textDecoration: 'none',
+      padding: isLaptopExact ? '0.375rem 0.5rem' : (isSmallScreen ? '0.375rem 0.5rem' : '0.5rem 0.75rem'),
+      borderRadius: '0.5rem',
+      transition: 'all 0.2s',
+      backgroundColor: 'white',
+      border: '1px solid #e5e7eb',
+      zIndex: 2,
+      minWidth: isLaptopExact ? '80px' : (isSmallScreen ? '80px' : 'auto'),
+      whiteSpace: isSmallScreen ? 'nowrap' as const : 'normal' as const,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      maxWidth: isLaptopExact ? '120px' : (isSmallScreen ? '100px' : '150px'),
+    };
+
+    // Price card style
+    const priceCardStyle = {
+      display: 'flex',
+      flexDirection: 'column' as 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.75rem',
+      background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
+      borderRadius: '0.75rem',
+      padding: '1.25rem',
+      border: '1px solid #e5e7eb',
+      minWidth: isSmallScreen ? '100%' : '12.5rem',
+    };
+
+    // Price text style
+    const priceTextStyle = {
+      fontSize: '1.5rem',
+      fontWeight: 700,
+      lineHeight: 1.2,
+      color: '#111827',
+      textAlign: 'center' as const,
+    };
+
+    // Section card style (specifications, analysis, description)
+    const sectionCardStyle = {
+      background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
+      borderRadius: '0.75rem',
+      padding: '1.25rem',
+      border: '1px solid #e5e7eb',
+      marginBottom: '1rem',
+    };
+
+    // Section heading style
+    const sectionHeadingStyle = {
+      fontSize: '1.25rem',
+      fontWeight: 600,
+      marginBottom: '0.75rem',
+      color: '#111827',
+    };
+
+    // Content card style (inner white card)
+    const contentCardStyle = {
+      background: 'white',
+      borderRadius: '0.5rem',
+      padding: '1rem',
+      border: '1px solid #e5e7eb',
+    };
+
+    // Specifications grid style
+    const specificationsGridStyle = {
+      ...contentCardStyle,
+      display: 'grid',
+      gridTemplateColumns: isSmallScreen ? '1fr' : 'repeat(2, 1fr)',
+      gap: '1rem',
+    };
+
+    // Specification row style
+    const specRowStyle = {
+      display: 'flex',
+      justifyContent: 'space-between',
+    };
+
+    // Specification label style
+    const specLabelStyle = {
+      color: '#6b7280',
+      fontSize: '0.875rem',
+    };
+
+    // Specification value style
+    const specValueStyle = {
+      fontWeight: 500,
+      color: '#111827',
+    };
+
+    // Analysis content style
+    const analysisContentStyle = {
+      ...contentCardStyle,
+      display: 'flex',
+      flexDirection: 'column' as 'column',
+      gap: '0.75rem',
+    };
+
+    // Savings row style
+    const savingsRowStyle = {
+      display: 'flex',
+      justifyContent: 'space-between',
+      padding: '0.5rem',
+      backgroundColor: '#f0fdf4',
+      borderRadius: '0.375rem',
+      border: '1px solid #dcfce7',
+    };
+
+    // Description content style
+    const descriptionContentStyle = {
+      ...contentCardStyle,
+      color: '#4b5563',
+      fontSize: '0.9375rem',
+      lineHeight: 1.6,
+      textAlign: 'justify' as const,
+      height: isSmallScreen ? 'auto' : '100%',
+      minHeight: isSmallScreen ? '9.375rem' : 'auto',
+      overflow: 'auto',
+    };
+
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        paddingBottom: isMobile ? '24px' : '48px' 
-      }}>
+      <div style={containerStyle}>
         {data.cars.map((carData: CarResult, index: number) => {
           const car = carData.car;
           const carImages = car.all_photos && Array.isArray(car.all_photos) 
@@ -431,95 +736,32 @@ const CarDetails = ({ content }: { content: string }) => {
             : (car.photo_url ? [car.photo_url] : []);
           
           return (
-            <div key={index} style={{ 
-              maxWidth: '1200px', 
-              margin: '0 auto',
-              padding: '16px',
-              display: 'flex',
-              flexDirection: 'column',
-              height: isMobile ? 'auto' : 'calc(100vh - 48px)',
-              position: 'relative',
-              marginBottom: '24px',
-              border: '2px solid rgb(157, 182, 217)',
-              borderRadius: '8px',
-              boxShadow: '0 6px 8px rgba(0, 0, 0, 0.1)'
-            }}>
+            <div key={index} style={carCardStyle}>
               {/* Top Half - Image Gallery */}
-              <div style={{ 
-                height: isMobile ? 'auto' : '35%', 
-                width: '100%', 
-                minHeight: isMobile ? '0' : '300px',
-                marginBottom: isMobile ? '30px' : '0'
-              }}>
+              <div style={galleryStyle}>
                 <ImageSlideshow images={carImages} />
               </div>
 
               {/* Bottom Half - Content */}
-              <div style={{ 
-                height: isMobile ? 'auto' : '65%',
-                overflowY: isMobile ? 'visible' : 'auto',
-                position: 'relative',
-                marginTop: isMobile ? '40px' : '15%',
-                paddingBottom: isMobile ? '30px' : '0'
-              }}>
+              <div style={contentStyle}>
                 {/* Car Name & Price Cards */}
-                <div style={{
-                  display: 'flex',
-                  flexDirection: isMobile ? 'column' : 'row',
-                  gap: '16px',
-                  marginBottom: '16px',
-                  position: 'relative'
-                }}>
+                <div style={cardLayoutStyle}>
                   {/* Car Name Card */}
-                  <div style={{
-                    flex: 2,
-                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%)',
-                    borderRadius: '0.75rem',
-                    padding: '1.25rem',
-                    border: '1px solid #bae6fd',
-                    marginBottom: isMobile ? '12px' : '0',
-                    position: 'relative'
-                  }}>
-                    <h1 style={{ 
-                      fontSize: isMobile ? '1.25rem' : '1.5rem', 
-                      fontWeight: 700, 
-                      color: '#0369a1',
-                      marginBottom: '0.5rem'
-                    }}>{car.name}</h1>
+                  <div style={nameCardStyle}>
+                    <h1 style={nameHeadingStyle}>{car.name}</h1>
                     
-                    {/* Dodajemo lokaciju */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: '#0284c7',
-                      fontSize: '0.875rem',
-                      marginTop: '8px'
-                    }}>
+                    {/* Location */}
+                    <div style={locationStyle}>
                       <span style={{ marginRight: '6px' }}>📍</span>
                       <span>{car.location || "Nije navedeno"}</span>
                     </div>
 
-                    {/* External Link positioned in the bottom right corner */}
+                    {/* External Link */}
                     <a
                       href={car.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{
-                        position: 'absolute',
-                        bottom: '10px',
-                        right: '10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        color: '#3b82f6',
-                        fontSize: '0.875rem',
-                        textDecoration: 'none',
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: '0.5rem',
-                        transition: 'all 0.2s',
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb'
-                      }}
+                      style={externalLinkStyle}
                     >
                       Visit Website
                       <ExternalLink size={14} />
@@ -527,25 +769,8 @@ const CarDetails = ({ content }: { content: string }) => {
                   </div>
 
                   {/* Price Card */}
-                  <div style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    gap: '0.75rem',
-                    background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
-                    borderRadius: '0.75rem',
-                    padding: '1.25rem',
-                    border: '1px solid #e5e7eb',
-                    minWidth: isMobile ? '100%' : '200px'
-                  }}>
-                    <p style={{ 
-                      fontSize: '1.5rem', 
-                      fontWeight: 700, 
-                      lineHeight: '1.2', 
-                      color: '#111827',
-                      textAlign: 'center'
-                    }}>
+                  <div style={priceCardStyle}>
+                    <p style={priceTextStyle}>
                       {car.price}
                     </p>
                     <div className={`flex items-center justify-center px-4 py-2 rounded-full ${getScoreColor(carData.score)}`}>
@@ -555,61 +780,43 @@ const CarDetails = ({ content }: { content: string }) => {
                 </div>
 
                 {/* Car Specifications */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
-                  borderRadius: '0.75rem',
-                  padding: '1.25rem',
-                  border: '1px solid #e5e7eb'
-                }}>
-                  <h2 style={{ 
-                    fontSize: '1.25rem', 
-                    fontWeight: 600, 
-                    marginBottom: '0.75rem',
-                    color: '#111827'
-                  }}>Specifications</h2>
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(2, 1fr)', 
-                    gap: '1rem',
-                    background: 'white',
-                    borderRadius: '0.5rem',
-                    padding: '1rem',
-                    border: '1px solid #e5e7eb'
-                  }}>
+                <div style={sectionCardStyle}>
+                  <h2 style={sectionHeadingStyle}>Specifications</h2>
+                  <div style={specificationsGridStyle}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Year:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.year}</span>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Year:</span>
+                        <span style={specValueStyle}>{car.year}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Mileage:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.mileage}</span>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Mileage:</span>
+                        <span style={specValueStyle}>{car.mileage}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Engine:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.cubic_capacity}</span>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Engine:</span>
+                        <span style={specValueStyle}>{car.cubic_capacity}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Horsepower:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.horsepower}</span>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Horsepower:</span>
+                        <span style={specValueStyle}>{car.horsepower}</span>
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Transmission:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.transmission}</span>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Transmission:</span>
+                        <span style={specValueStyle}>{car.transmission}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Fuel:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.fuel}</span>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Fuel:</span>
+                        <span style={specValueStyle}>{car.fuel}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Damage:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.damage}</span>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Damage:</span>
+                        <span style={specValueStyle}>{car.damage}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Location:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{car.location}</span>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Location:</span>
+                        <span style={specValueStyle}>{car.location}</span>
                       </div>
                     </div>
                   </div>
@@ -617,51 +824,26 @@ const CarDetails = ({ content }: { content: string }) => {
 
                 {/* Analysis Card */}
                 {carData.analysis && (
-                  <div style={{
-                    background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
-                    borderRadius: '0.75rem',
-                    padding: '1.25rem',
-                    border: '1px solid #e5e7eb'
-                  }}>
-                    <h2 style={{ 
-                      fontSize: '1.25rem', 
-                      fontWeight: 600, 
-                      marginBottom: '0.75rem',
-                      color: '#111827'
-                    }}>Analysis</h2>
-                    <div style={{ 
-                      background: 'white',
-                      borderRadius: '0.5rem',
-                      padding: '1rem',
-                      border: '1px solid #e5e7eb',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.75rem'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Value:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{carData.analysis.value}</span>
+                  <div style={sectionCardStyle}>
+                    <h2 style={sectionHeadingStyle}>Analysis</h2>
+                    <div style={analysisContentStyle}>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Value:</span>
+                        <span style={specValueStyle}>{carData.analysis.value}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Age:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{carData.analysis.age}</span>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Age:</span>
+                        <span style={specValueStyle}>{carData.analysis.age}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Condition:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{carData.analysis.condition}</span>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Condition:</span>
+                        <span style={specValueStyle}>{carData.analysis.condition}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Engine:</span>
-                        <span style={{ fontWeight: 500, color: '#111827' }}>{carData.analysis.engine}</span>
+                      <div style={specRowStyle}>
+                        <span style={specLabelStyle}>Engine:</span>
+                        <span style={specValueStyle}>{carData.analysis.engine}</span>
                       </div>
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between',
-                        padding: '0.5rem',
-                        backgroundColor: '#f0fdf4',
-                        borderRadius: '0.375rem',
-                        border: '1px solid #dcfce7'
-                      }}>
+                      <div style={savingsRowStyle}>
                         <span style={{ color: '#166534', fontSize: '0.875rem', fontWeight: 500 }}>Potential Savings:</span>
                         <span style={{ fontWeight: 600, color: '#166534' }}>${carData.analysis.savings}</span>
                       </div>
@@ -670,32 +852,9 @@ const CarDetails = ({ content }: { content: string }) => {
                 )}
 
                 {/* Description Card */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #fafafa 0%, #f3f4f6 100%)',
-                  borderRadius: '0.75rem',
-                  padding: '1.25rem',
-                  border: '1px solid #e5e7eb',
-                  flex: 1
-                }}>
-                  <h2 style={{ 
-                    fontSize: '1.25rem', 
-                    fontWeight: 600, 
-                    marginBottom: '0.75rem',
-                    color: '#111827'
-                  }}>Description</h2>
-                  <div style={{ 
-                    background: 'white',
-                    borderRadius: '0.5rem',
-                    padding: '1rem',
-                    border: '1px solid #e5e7eb',
-                    color: '#4b5563',
-                    fontSize: '0.9375rem',
-                    lineHeight: '1.6',
-                    textAlign: 'justify',
-                    height: isMobile ? 'auto' : '100%', 
-                    minHeight: isMobile ? '150px' : 'auto',
-                    overflow: 'auto'
-                  }}>
+                <div style={sectionCardStyle}>
+                  <h2 style={sectionHeadingStyle}>Description</h2>
+                  <div style={descriptionContentStyle}>
                     {carData.description || "No detailed description available for this vehicle."}
                   </div>
                 </div>
