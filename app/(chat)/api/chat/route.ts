@@ -75,7 +75,7 @@ export async function POST(request: Request) {
                 'createDocument',
                 'updateDocument',
                 'requestSuggestions',
-                'getBestCar',
+                //'getBestCar',
                 'getCarChanges',
               ],
         experimental_transform: smoothStream({ chunking: 'word' }),
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
             session,
             dataStream,
           }),
-          getBestCar,
+          //getBestCar,
           getCarChanges,
         },
         onFinish: async ({ response, reasoning }) => {
