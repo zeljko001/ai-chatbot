@@ -53,8 +53,8 @@ export const getBestCar = tool({
       //   : budget;
       
       const response = await fetch(
-        //'http://localhost:3001/api/chat', //LOCAL
-        'https://my-ai-api-156f.onrender.com/api/chat', //RENDER
+        'http://localhost:3001/api/chat', //LOCAL
+        // 'https://my-ai-api-156f.onrender.com/api/chat', //RENDER
         {
           method: 'POST',
           headers: {

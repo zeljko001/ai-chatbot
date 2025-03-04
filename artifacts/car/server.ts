@@ -45,6 +45,7 @@ export const carDocumentHandler = createDocumentHandler<"car">({
   
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
+    let hasContent = false;
     
     const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
@@ -56,22 +57,71 @@ export const carDocumentHandler = createDocumentHandler<"car">({
       },
     });
 
-    // 
-
     for await (const delta of fullStream) {
         if (delta.type === 'tool-result') {
             const carData = delta.result;
-            // Validate the data against our schema
-            const validatedData = carSchema.parse(carData);
-            const content = JSON.stringify(validatedData, null, 2);
-            
-            dataStream.writeData({
-                type: "car-delta",
-                content,
-            });
+            // For "not found" case, create valid content
+            if (!carData.found) {
+              const notFoundResponse = {
+                found: false,
+                message: carData.message || "No matching cars found",
+                description: carData.description || "Try adjusting your search parameters."
+              };
+              
+              const content = JSON.stringify(notFoundResponse, null, 2);
+              
+              dataStream.writeData({
+                  type: "car-delta",
+                  content,
+              });
+              
+              draftContent = content;
+              hasContent = true;
+            } else {
+              // Handle normal case with cars found
+              try {
+                // Validate the data against our schema
+                const validatedData = carSchema.parse(carData);
+                const content = JSON.stringify(validatedData, null, 2);
+                
+                dataStream.writeData({
+                    type: "car-delta",
+                    content,
+                });
 
-            draftContent = content;
+                draftContent = content;
+                hasContent = true;
+              } catch (error) {
+                console.error("Error validating car data:", error);
+                // Create an error response if validation fails
+                const errorResponse = {
+                  found: false,
+                  message: "Error processing car data",
+                  description: "The system encountered an error processing the car search results."
+                };
+                
+                const content = JSON.stringify(errorResponse, null, 2);
+                dataStream.writeData({
+                    type: "car-delta",
+                    content,
+                });
+                
+                draftContent = content;
+                hasContent = true;
+              }
+            }
         }
+    }
+
+    // If no content was written at all, return a default error message
+    if (!hasContent) {
+      const fallbackResponse = {
+        found: false,
+        message: "Could not retrieve car information",
+        description: "There is no car with these specifications."
+      };
+      
+      draftContent = JSON.stringify(fallbackResponse, null, 2);
     }
 
     return draftContent;
